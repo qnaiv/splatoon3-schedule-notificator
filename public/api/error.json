@@ -1,0 +1,7 @@
+{
+  "timestamp": "2025-07-19T12:08:10.077Z",
+  "error": "Invalid data structure: missing results array",
+  "stack": "Error: Invalid data structure: missing results array\n    at validateScheduleData (file:///home/qnaiv/vscode/splatoon3-schedule-notificator/scripts/fetch-schedule.js:44:11)\n    at fetchAndSaveSchedule (file:///home/qnaiv/vscode/splatoon3-schedule-notificator/scripts/fetch-schedule.js:126:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+  "apiUrl": "https://spla3.yuu26.com/api/schedule",
+  "userAgent": "Splatoon3SchedulePWA/1.0 (GitHub Pages Static API)"
+}

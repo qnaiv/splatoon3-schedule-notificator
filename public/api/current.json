@@ -1,0 +1,71 @@
+{
+  "lastUpdated": "2025-07-19T15:05:56.992Z",
+  "dataCount": 3,
+  "data": {
+    "results": [
+      {
+        "start_time": "2025-07-19T23:00:00+09:00",
+        "end_time": "2025-07-20T01:00:00+09:00",
+        "rule": {
+          "key": "TURF_WAR",
+          "name": "ナワバリバトル"
+        },
+        "stages": [
+          {
+            "id": 8,
+            "name": "タラポートショッピングパーク",
+            "image": "https://api.lp1.av5ja.srv.nintendo.net/resources/prod/v3/stage_img/icon/low_resolution/f70e9f5af477a39ccfab631bfb81c9e2cedb4cd0947fe260847c214a6d23695f_1.png?Expires=1768003200&Signature=NKk4TgEl-DjRVytcxnG4CM4axTCzLIGs3tiHERDSPN-P5yPVlrw89wNnL7e6JJ-sVjxlLqkoRhHiuiVnTH8v2t0LXxVVi8eH6LwRUin8--KDtHFEnfMJ~OPFx2MXe85qHQqsAtPTm1Eo0lYgnxqxclycuEvgEtToADuW6VzQyW5MXyml-IvDu6b1sEAxpacoRlLu5SPICdJa7xlfh~uWq6wYPc0hd2QsJpLBMdPSUO3tHB-yIigZZXvxD4Ka6fzis9ViKR-rnaqmh9JFC1YmxgVSq0s1OOpTrXWy3IoH0qQoJJ99zgOZGVM4ox2SRtgLhrNbygqX4Pis2q6hPOH2Yw__&Key-Pair-Id=KNBS2THMRC385"
+          },
+          {
+            "id": 15,
+            "name": "ザトウマーケット",
+            "image": "https://api.lp1.av5ja.srv.nintendo.net/resources/prod/v3/stage_img/icon/low_resolution/a8ba96c3dbd015b7bc6ea4fa067245c4e9aee62b6696cb41e02d35139dd21fe7_1.png?Expires=1768003200&Signature=qGFPi4yxxnFWRu2kDzK9dPbT2duPZ753MhjVH7FS8gUD~jP1WvButzdzhvJP18yOzCURvyTc1tYLkUFEuZqPRPzjjjCebx0O1MOao778iZpelfZ-XMdVPYwk~VcfXtg2rhmJ2aorLMVt0fpk7xjfrW-7mSNirPPDduzW03D~lVks0p3CFIZuxWN5FFQo9cPAA3fO4Fnwg5gDTJUAy4Kq269sPt-j5uLLSKuoox-6IiWrn7dErnf2XuVynPLFIUA~DXvvG8VWRLn9XLjLdGjdC2hKN6-5f4M0Bufrd~OEGyGHkd1u5~w9HgSlNnTUg93YAQZ2kTI5eul5v3zyROt1nA__&Key-Pair-Id=KNBS2THMRC385"
+          }
+        ],
+        "is_fest": false
+      },
+      {
+        "start_time": "2025-07-19T23:00:00+09:00",
+        "end_time": "2025-07-20T01:00:00+09:00",
+        "rule": {
+          "key": "LOFT",
+          "name": "ガチヤグラ"
+        },
+        "stages": [
+          {
+            "id": 2,
+            "name": "ゴンズイ地区",
+            "image": "https://api.lp1.av5ja.srv.nintendo.net/resources/prod/v3/stage_img/icon/low_resolution/898e1ae6c737a9d44552c7c81f9b710676492681525c514eadc68a6780aa52af_1.png?Expires=1768003200&Signature=rkFiH4L3QkVk1pkJT4SCM07ziR0gxxVaKNEK6AnemuzO7Y~~CcJZAL4xMQFK1VFMMYG2WMtIHJ7WqfH7xeL3H-~XYhgKfQrZX8Be46S8TktohEnXfRh72jF6gWpP9uxI2YdaCxq7niPeeKv7IxoTK94USvf0IXqDbiYJrAaDc4T~aJ06wZF8dLIyoei9TF1UBKzJxSysz~5oa9Cvfb9Xy617AA9TgS~HbMAk1x5aWRgTnDvZcLtFWuhJziT~T2vc6CRAboSMA07aZ6Z2S-q8ep4n20TDz5dkr7cKUIyEWVrS3AMecFu6G10l9mfjcHJsLSJ1lANRVJxguzxVrNwJfA__&Key-Pair-Id=KNBS2THMRC385"
+          },
+          {
+            "id": 5,
+            "name": "ナンプラー遺跡",
+            "image": "https://api.lp1.av5ja.srv.nintendo.net/resources/prod/v3/stage_img/icon/low_resolution/f14c2a64e49d243679fc0884af91e1a07dc65600f9b90aefe92d7790dcffb191_1.png?Expires=1768003200&Signature=EcaMKmATURVK0IZ7dn0jzo~MXQfeA8SmEmqMV8jtDUNSppJj1v6SCMzJZDs4LlwMGu2FEbMv~~i-znNXy1LL-j8Qkwcqkxm44doB9JKDtGTaFRPlufTdQ2CD1xxDDPx37evvbe5D~CGcmQpEOk7cog9fLXepDXx~3Q1uU-U9m0Xei75g13t2wx-~fNNx095J8pFJwSevIBIpJZ~UyxHbhEbM2H8PK4L~z1J7i5f8B~o4MN16~t3t230znMlVpdYV08xLzQU8YdYSKtRGWzeyYDKrMNQMZLC7WmRLx8CujvgnHSUvoI2nArnp~xT5qk1dynFuapoB0ZDzRlFj69efGg__&Key-Pair-Id=KNBS2THMRC385"
+          }
+        ],
+        "is_fest": false
+      },
+      {
+        "start_time": "2025-07-19T23:00:00+09:00",
+        "end_time": "2025-07-20T01:00:00+09:00",
+        "rule": {
+          "key": "CLAM",
+          "name": "ガチアサリ"
+        },
+        "stages": [
+          {
+            "id": 16,
+            "name": "スメーシーワールド",
+            "image": "https://api.lp1.av5ja.srv.nintendo.net/resources/prod/v3/stage_img/icon/low_resolution/61ea801fa4ed32360dcaf83986222ded46a72dbf56194acc6d0cf4659a92ba85_1.png?Expires=1768003200&Signature=IdmSFiISOlWl5qynL7ceZDfpMYPGt~59LpiPrHbijtzOrZnO8SRGI1WMFOsF3FPYiY0F0X4-j~AaHoTm7aslsAdm9UJuTcRpTJsxxey1tLe7pQAfIkoJ2tj4OUMXwJpq-Zs8fQgnihE5lv4-5g8yiVPqWTxgDrcq0IrslbKFkZxTZ4u-vieOALJC1OoxkqGGAB0qZjA2olj6v-SamfLSIXll2fHfrU~hO319P0ZEEeL5v8mWicT-h90BZSl7RCFXVDXB64ZSftG4uU9XpksxpfJopxd3GmwYdpCGad4cqd2PhRbJ-Xn9xR2~HWa0wPlfBdqFdEMJS838~2xFLxIJ-Q__&Key-Pair-Id=KNBS2THMRC385"
+          },
+          {
+            "id": 26,
+            "name": "デカライン高架下",
+            "image": "https://api.lp1.av5ja.srv.nintendo.net/resources/prod/v3/stage_img/icon/low_resolution/249c981fdd888e79ada712ddf899bddbead508d71043af3ff96c90a7b5959c73_1.png?Expires=1768003200&Signature=HacY6W88bQl3cy8YriZhdh2FVKLXv-lHtMyuYA0uueZXArqoq92ZcPXLURqL4-gmfVHdZlcuo4eI5czsdGS~B6kWTJF2P9FSqmpJtu0LpueJJQb6BtzmplNndn3KW0deFaIPUA92uBPKh7eZ9whucVEBRdAnliN9n78D8KzLCDghAZd4egG5uzr2vi4V~X-3aDieQg8kYDTA~gVQyYZVGo5WIgh2ik-M5Tqd7tCVLmmyKbFFaDsRH5Ct7nOSQ4aJ36pe2foqM7mBC9PjlL0AFzLJR2OzvMLlNFG5fzgRMa5guur4rtmEOcakP2WVaqu2hqoHok1zFUmn4K-~GDjtqA__&Key-Pair-Id=KNBS2THMRC385"
+          }
+        ],
+        "is_fest": false
+      }
+    ]
+  }
+}
