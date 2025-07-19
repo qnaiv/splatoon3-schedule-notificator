@@ -1,0 +1,14 @@
+{
+  "name": "splatoon3-schedule-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for fetching and transforming Splatoon3 schedule data",
+  "main": "fetch-schedule.js",
+  "scripts": {
+    "fetch": "node fetch-schedule.js",
+    "test": "node test-transform.js"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "type": "module"
+}

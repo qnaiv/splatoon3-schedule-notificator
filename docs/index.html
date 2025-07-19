@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splatoon3 Schedule API</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .endpoint {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .endpoint h3 {
+            margin-top: 0;
+            color: #FFD700;
+        }
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        .url {
+            word-break: break-all;
+            font-size: 0.9em;
+        }
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦑 Splatoon3 Schedule API</h1>
+        
+        <div class="status">
+            <h3>📊 API Status</h3>
+            <p>Last Updated: <span id="lastUpdated">Loading...</span></p>
+            <p>Next Update: <span id="nextUpdate">Loading...</span></p>
+        </div>
+
+        <div class="endpoint">
+            <h3>📅 Full Schedule Data</h3>
+            <p>すべてのマッチタイプのスケジュールデータ</p>
+            <code class="url">https://yourusername.github.io/splatoon3-schedule-notificator/api/schedule.json</code>
+        </div>
+
+        <div class="endpoint">
+            <h3>⏰ Last Updated Info</h3>
+            <p>最終更新時刻と次回更新予定時刻</p>
+            <code class="url">https://yourusername.github.io/splatoon3-schedule-notificator/api/last-updated.json</code>
+        </div>
+
+        <div class="endpoint">
+            <h3>📋 Data Structure</h3>
+            <pre><code>{
+  "lastUpdated": "2024-01-01T12:00:00.000Z",
+  "source": "Splatoon3 API via GitHub Actions",
+  "data": {
+    "result": {
+      "regular": [/* レギュラーマッチ */],
+      "bankara_challenge": [/* バンカラ(チャレンジ) */],
+      "bankara_open": [/* バンカラ(オープン) */],
+      "x": [/* Xマッチ */]
+    }
+  }
+}</code></pre>
+        </div>
+
+        <div class="endpoint">
+            <h3>🔗 Discord Bot Integration</h3>
+            <p>このAPIはDiscord Bot経由でプッシュ通知を提供します</p>
+            <p>WebUIで設定→Discord Botコマンド生成→自動通知</p>
+        </div>
+    </div>
+
+    <script>
+        // ステータス情報を動的に取得
+        fetch('./api/last-updated.json')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('lastUpdated').textContent = 
+                    new Date(data.timestamp).toLocaleString('ja-JP');
+                document.getElementById('nextUpdate').textContent = 
+                    new Date(data.nextUpdate).toLocaleString('ja-JP');
+            })
+            .catch(error => {
+                document.getElementById('lastUpdated').textContent = 'Error';
+                document.getElementById('nextUpdate').textContent = 'Error';
+            });
+    </script>
+</body>
+</html>

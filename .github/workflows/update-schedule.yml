@@ -1,0 +1,62 @@
+name: Update Splatoon3 Schedule
+
+on:
+  schedule:
+    # 日本時間の奇数時間（1:00, 3:00, 5:00, 7:00, 9:00, 11:00, 13:00, 15:00, 17:00, 19:00, 21:00, 23:00）に実行
+    # UTC時間: 16:00, 18:00, 20:00, 22:00, 0:00, 2:00, 4:00, 6:00, 8:00, 10:00, 12:00, 14:00
+    - cron: '0 16,18,20,22,0,2,4,6,8,10,12,14 * * *'
+  workflow_dispatch:  # 手動実行も可能
+    inputs:
+      force_update:
+        description: 'Force update even if data is recent'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  update-schedule:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm install
+          
+      - name: Fetch and transform schedule data
+        run: |
+          cd scripts
+          node fetch-schedule.js
+        env:
+          FORCE_UPDATE: ${{ github.event.inputs.force_update || 'false' }}
+          
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './docs'
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
