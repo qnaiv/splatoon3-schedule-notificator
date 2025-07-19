@@ -48,14 +48,20 @@ jobs:
           echo "Current file size:"
           wc -c dist/api/current.json || echo "current.json not found"
           
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+        if: github.ref == 'refs/heads/main'
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
         if: github.ref == 'refs/heads/main'
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          # 静的ファイルのキャッシュを避けるため
-          force_orphan: true
+          path: ./dist
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+        if: github.ref == 'refs/heads/main'
           
       - name: Create deployment status
         if: always()
