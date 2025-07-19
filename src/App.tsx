@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Settings, RefreshCw, Clock, Users } from 'lucide-react';
+import { Calendar, Settings, RefreshCw, Users } from 'lucide-react';
 import NotificationSettings from './components/NotificationSettings';
 import { useSchedule } from './hooks/useSchedule';
 import { useSettings } from './hooks/useSettings';
@@ -13,7 +13,6 @@ const App: React.FC = () => {
     loading, 
     error, 
     refreshData,
-    getTimeUntilNextMatch,
     lastUpdated 
   } = useSchedule();
   const { settings, enableNotifications } = useSettings();
@@ -40,20 +39,6 @@ const App: React.FC = () => {
     }
   }, [settings, enableNotifications]);
 
-  const { minutes: minutesUntilNext, nextMatch } = getTimeUntilNextMatch();
-
-  const formatTimeUntilNext = () => {
-    if (minutesUntilNext < 0) return null;
-    
-    const hours = Math.floor(minutesUntilNext / 60);
-    const mins = minutesUntilNext % 60;
-    
-    if (hours > 0) {
-      return `${hours}時間${mins}分後`;
-    } else {
-      return `${mins}分後`;
-    }
-  };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -159,8 +144,6 @@ const App: React.FC = () => {
             upcomingMatches={upcomingMatches}
             loading={loading}
             error={error}
-            nextMatch={nextMatch}
-            timeUntilNext={formatTimeUntilNext()}
             formatTime={formatTime}
             formatDate={formatDate}
           />
@@ -178,8 +161,6 @@ interface ScheduleViewProps {
   upcomingMatches: ScheduleMatch[];
   loading: boolean;
   error: string | null;
-  nextMatch: ScheduleMatch | null;
-  timeUntilNext: string | null;
   formatTime: (dateString: string) => string;
   formatDate: (dateString: string) => string;
 }
@@ -189,33 +170,9 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
   upcomingMatches,
   loading,
   error,
-  nextMatch,
-  timeUntilNext,
   formatTime,
   formatDate
 }) => {
-  const getNextMatchRule = (matchType: string, upcomingMatches: ScheduleMatch[], nextMatch: ScheduleMatch | null) => {
-    const match = upcomingMatches.find(m => m.match_type === matchType) || 
-                  (nextMatch?.match_type === matchType ? nextMatch : null);
-    if (!match) return '-';
-    
-    const ruleMap = {
-      'ナワバリバトル': 'ナワバリ',
-      'ガチエリア': 'エリア',
-      'ガチヤグラ': 'ヤグラ',
-      'ガチホコバトル': 'ホコ',
-      'ガチアサリ': 'アサリ'
-    };
-    return ruleMap[match.rule.name as keyof typeof ruleMap] || match.rule.name;
-  };
-
-  const getNextMatchStage = (matchType: string, upcomingMatches: ScheduleMatch[], nextMatch: ScheduleMatch | null) => {
-    const match = upcomingMatches.find(m => m.match_type === matchType) || 
-                  (nextMatch?.match_type === matchType ? nextMatch : null);
-    if (!match || !match.stages || match.stages.length === 0) return '-';
-    
-    return match.stages.map(stage => stage.name).join(' / ');
-  };
 
   const getCompactMatchTypeName = (matchType: string) => {
     if (matchType === 'レギュラーマッチ') return '🎯 ナワバリ';
@@ -430,123 +387,5 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
   );
 };
 
-// マッチカードコンポーネント
-interface MatchCardProps {
-  match: ScheduleMatch;
-  formatTime: (dateString: string) => string;
-  formatDate?: (dateString: string) => string;
-  isCurrent: boolean;
-}
-
-const MatchCard: React.FC<MatchCardProps> = ({
-  match,
-  formatTime,
-  formatDate,
-  isCurrent
-}) => {
-  const getMatchTypeInfo = (matchType: string) => {
-    console.log('Match type:', matchType); // デバッグ用
-    
-    if (matchType === 'レギュラーマッチ') {
-      return {
-        name: '🎯 ナワバリ',
-        color: 'bg-lime-100 text-lime-800 border-lime-200',
-        bgColor: 'bg-lime-50',
-        borderColor: 'border-lime-200'
-      };
-    } else if (matchType === 'バンカラマッチ(チャレンジ)') {
-      return {
-        name: '⚔️ バンカラ(チャレンジ)',
-        color: 'bg-red-100 text-red-800 border-red-200',
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200'
-      };
-    } else if (matchType === 'バンカラマッチ(オープン)') {
-      return {
-        name: '🛡️ バンカラ(オープン)',
-        color: 'bg-red-100 text-red-800 border-red-200',
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200'
-      };
-    } else if (matchType === 'Xマッチ') {
-      return {
-        name: '✨ Xマッチ',
-        color: 'bg-teal-100 text-teal-800 border-teal-200',
-        bgColor: 'bg-teal-50',
-        borderColor: 'border-teal-200'
-      };
-    }
-    return {
-      name: matchType || 'その他',
-      color: 'bg-gray-100 text-gray-800 border-gray-200',
-      bgColor: 'bg-gray-50',
-      borderColor: 'border-gray-200'
-    };
-  };
-
-  const getRuleDisplay = (ruleName: string) => {
-    const ruleMap = {
-      'ナワバリバトル': '🎨 ナワバリバトル',
-      'ガチエリア': '🎯 ガチエリア',
-      'ガチヤグラ': '🚂 ガチヤグラ',
-      'ガチホコバトル': '🏆 ガチホコ',
-      'ガチアサリ': '🐚 ガチアサリ'
-    };
-    return ruleMap[ruleName as keyof typeof ruleMap] || `⚡ ${ruleName}`;
-  };
-
-  const matchTypeInfo = getMatchTypeInfo(match.match_type || '');
-
-  return (
-    <div className={`rounded-lg border p-4 transition-all ${
-      isCurrent 
-        ? `${matchTypeInfo.bgColor} ${matchTypeInfo.borderColor} shadow-md` 
-        : `bg-white ${matchTypeInfo.borderColor} hover:shadow-md`
-    }`}>
-      {/* マッチタイプヘッダー */}
-      <div className="flex items-center justify-between mb-3">
-        <span className={`px-2.5 py-0.5 rounded text-sm font-medium border ${matchTypeInfo.color}`}>
-          {matchTypeInfo.name}
-        </span>
-        {isCurrent && (
-          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
-            開催中
-          </span>
-        )}
-      </div>
-
-      {/* 時間情報 */}
-      <div className="mb-3">
-        {formatDate && (
-          <div className="text-xs text-gray-500 mb-1">
-            {formatDate(match.start_time)}
-          </div>
-        )}
-        <div className="text-sm font-medium text-gray-700">
-          {formatTime(match.start_time)} - {formatTime(match.end_time)}
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {/* ルール */}
-        <div>
-          <span className="text-sm font-medium text-gray-700">
-            {getRuleDisplay(match.rule.name)}
-          </span>
-        </div>
-
-        {/* ステージ */}
-        <div className="space-y-1">
-          {match.stages.map((stage, index) => (
-            <div key={index} className="flex items-center gap-2 text-sm text-gray-700 font-medium">
-              <span className="text-blue-500">🗺️</span>
-              {stage.name}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default App;

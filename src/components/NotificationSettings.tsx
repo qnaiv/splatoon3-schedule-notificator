@@ -427,9 +427,7 @@ const ConditionSection: React.FC<ConditionSectionProps> = ({
   title,
   options,
   selectedValues,
-  operator,
   onSelectionChange,
-  onOperatorChange,
   isGrid = false
 }) => {
   const handleToggle = (id: string) => {

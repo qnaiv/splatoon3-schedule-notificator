@@ -5,7 +5,7 @@ import { Spla3ApiResponse, ScheduleMatch, Stage } from '../types';
 const API_CONFIG = {
   baseUrl: import.meta.env.VITE_API_BASE_URL || 
     (import.meta.env.PROD 
-      ? 'https://yourusername.github.io/splatoon3-schedule-api' 
+      ? 'https://qnaiv.github.io/splatoon3-schedule-notificator' 
       : ''),
   scheduleEndpoint: '/api/schedule.json',
   currentEndpoint: '/api/current.json'
@@ -41,8 +41,8 @@ export const useSchedule = () => {
       console.log('API Response structure:', {
         hasResult: !!data.data?.result,
         resultKeys: data.data?.result ? Object.keys(data.data.result) : [],
-        xMatchExists: !!data.data?.result?.x_match,
-        xMatchLength: data.data?.result?.x_match?.length || 0
+        xMatchExists: !!data.data?.result?.x,
+        xMatchLength: data.data?.result?.x?.length || 0
       });
       
       return data;
