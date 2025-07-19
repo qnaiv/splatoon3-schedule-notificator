@@ -1,0 +1,1 @@
+# splatoon3-schedule-notificator
