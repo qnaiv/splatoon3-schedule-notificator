@@ -88,9 +88,8 @@ async function checkScheduleAndNotify() {
   try {
     console.log('[SW] Checking schedule...');
     
-    // GitHub Pages からスケジュールデータ取得
-    // 注意: 実際のGitHub PagesのURLに変更する必要があります
-    const apiUrl = 'https://yourusername.github.io/splatoon3-schedule-api/api/schedule.json';
+    // スケジュールデータ取得（相対パスを使用）
+    const apiUrl = '/api/schedule.json';
     
     const response = await fetch(apiUrl, {
       cache: 'no-cache',
@@ -121,7 +120,7 @@ async function checkScheduleAndNotify() {
     
     // 条件チェック
     const matchingNotifications = await checkNotificationConditions(
-      scheduleData.data,
+      scheduleData.data || scheduleData,
       userSettings.notificationConditions
     );
     
@@ -165,26 +164,79 @@ async function checkNotificationConditions(schedule, conditions) {
   const notifications = [];
   const now = new Date();
   
+  console.log('[SW] Current time:', now.toISOString());
+  
   for (const condition of conditions) {
-    if (!condition.enabled) continue;
+    if (!condition.enabled) {
+      console.log('[SW] Condition disabled:', condition.name);
+      continue;
+    }
     
-    // 通知タイミングを計算
-    const notifyTime = new Date(now.getTime() + condition.notifyMinutesBefore * 60000);
+    console.log('[SW] Checking condition:', condition.name, 'notify', condition.notifyMinutesBefore, 'minutes before');
     
-    for (const match of schedule.results) {
+    // 全てのマッチカテゴリをチェック
+    const allMatches = [];
+    
+    // レギュラーマッチ
+    if (schedule.result?.regular) {
+      allMatches.push(...schedule.result.regular.map(match => ({
+        ...match,
+        match_type: 'レギュラーマッチ'
+      })));
+    }
+    
+    // バンカラマッチ（チャレンジ）
+    if (schedule.result?.bankara_challenge) {
+      allMatches.push(...schedule.result.bankara_challenge.map(match => ({
+        ...match,
+        match_type: 'バンカラマッチ(チャレンジ)'
+      })));
+    }
+    
+    // バンカラマッチ（オープン）
+    if (schedule.result?.bankara_open) {
+      allMatches.push(...schedule.result.bankara_open.map(match => ({
+        ...match,
+        match_type: 'バンカラマッチ(オープン)'
+      })));
+    }
+    
+    // Xマッチ
+    if (schedule.result?.x) {
+      allMatches.push(...schedule.result.x.map(match => ({
+        ...match,
+        match_type: 'Xマッチ'
+      })));
+    }
+    
+    console.log('[SW] Total matches to check:', allMatches.length);
+    
+    for (const match of allMatches) {
       const matchStart = new Date(match.start_time);
       
-      // 通知タイミングから±2分以内かチェック（誤差許容）
-      const timeDiff = Math.abs(matchStart.getTime() - notifyTime.getTime());
-      if (timeDiff < 2 * 60 * 1000) {
+      // 通知タイミング = マッチ開始時刻 - n分
+      const notifyTime = new Date(matchStart.getTime() - condition.notifyMinutesBefore * 60000);
+      
+      console.log('[SW] Match:', match.rule.name, 'at', matchStart.toISOString(), 
+                  'notify at', notifyTime.toISOString(), 'type:', match.match_type);
+      
+      // 現在時刻が通知タイミング以降かチェック（通知テスト用）
+      // 通知タイミングから2時間以内であれば通知可能とする（定期チェック + テスト対応）
+      const timeUntilNotify = notifyTime.getTime() - now.getTime();
+      const timeSinceNotify = now.getTime() - notifyTime.getTime();
+      
+      if (timeSinceNotify >= 0 && timeSinceNotify <= 2 * 60 * 60 * 1000) {
+        console.log('[SW] Match is within notification window, checking conditions...');
         
         // 条件に合致するかチェック
         if (matchesUserCondition(match, condition)) {
           const stageNames = match.stages.map(s => s.name).join(' vs ');
           
+          console.log('[SW] Condition matched! Creating notification');
+          
           notifications.push({
             condition: condition.name,
-            message: `${condition.name}: ${condition.notifyMinutesBefore}分後に開始！\n${match.rule.name} - ${stageNames}`,
+            message: `${condition.name}: ${condition.notifyMinutesBefore}分前です！\n${match.rule.name} - ${stageNames}`,
             data: {
               conditionId: condition.id,
               conditionName: condition.name,
@@ -194,22 +246,39 @@ async function checkNotificationConditions(schedule, conditions) {
               stages: stageNames
             }
           });
+        } else {
+          console.log('[SW] Match found but conditions do not match');
         }
+      } else {
+        console.log('[SW] Match not in notification window. Time until notify:', 
+                    Math.round(timeUntilNotify / 60000), 'minutes');
       }
     }
   }
   
+  console.log('[SW] Total notifications to show:', notifications.length);
   return notifications;
 }
 
 // ユーザー条件との照合
 function matchesUserCondition(match, condition) {
+  console.log('[SW] Checking match against condition:', {
+    matchRule: match.rule.name,
+    matchType: match.match_type,
+    matchStages: match.stages.map(s => s.name),
+    conditionRules: condition.rules.values,
+    conditionTypes: condition.matchTypes.values,
+    conditionStages: condition.stages.values
+  });
+  
   // ステージ条件チェック
   const stageMatch = checkConditionArray(
     match.stages.map(s => s.id),
     condition.stages.values,
     condition.stages.operator
   );
+  
+  console.log('[SW] Stage match:', stageMatch);
   
   // ルール条件チェック
   const ruleMatch = checkConditionArray(
@@ -218,6 +287,8 @@ function matchesUserCondition(match, condition) {
     condition.rules.operator
   );
   
+  console.log('[SW] Rule match:', ruleMatch);
+  
   // マッチタイプ条件チェック（match_typeフィールドを使用）
   const typeMatch = checkConditionArray(
     [match.match_type || 'レギュラーマッチ'], // デフォルト値
@@ -225,14 +296,28 @@ function matchesUserCondition(match, condition) {
     condition.matchTypes.operator
   );
   
+  console.log('[SW] Type match:', typeMatch);
+  
   const result = stageMatch && ruleMatch && typeMatch;
   
+  console.log('[SW] Final match result:', result);
+  
   if (result) {
-    console.log('[SW] Match found:', {
+    console.log('[SW] ✅ Match found:', {
       condition: condition.name,
       rule: match.rule.name,
+      type: match.match_type,
       stages: match.stages.map(s => s.name),
       startTime: match.start_time
+    });
+  } else {
+    console.log('[SW] ❌ Match rejected:', {
+      condition: condition.name,
+      rule: match.rule.name,
+      type: match.match_type,
+      stageMatch,
+      ruleMatch,
+      typeMatch
     });
   }
   

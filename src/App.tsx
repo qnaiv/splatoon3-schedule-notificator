@@ -75,14 +75,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-teal-50">
       {/* ヘッダー */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-gradient-to-r from-white/90 to-white/95 backdrop-blur-sm shadow-lg border-b border-white/20">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">🦑</span>
+              <div className="w-12 h-12 bg-gradient-to-br from-splatoon-cyan to-splatoon-purple rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-xl">🦑</span>
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-800">スプラトゥーン3</h1>
@@ -110,35 +110,41 @@ const App: React.FC = () => {
       </header>
 
       {/* タブナビゲーション */}
-      <nav className="bg-white border-b">
+      <nav className="bg-white/80 backdrop-blur-sm border-b border-white/30">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex space-x-8">
             <button
               onClick={() => setCurrentTab('schedule')}
-              className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium text-sm ${
+              className={`relative flex items-center gap-2 py-4 px-3 font-semibold text-sm transition-all duration-300 ${
                 currentTab === 'schedule'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'text-blue-600'
+                  : 'text-gray-500 hover:text-blue-500'
               }`}
             >
-              <Calendar className="w-4 h-4" />
+              <Calendar className="w-5 h-5" />
               スケジュール
+              {currentTab === 'schedule' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+              )}
             </button>
             
             <button
               onClick={() => setCurrentTab('settings')}
-              className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium text-sm ${
+              className={`relative flex items-center gap-2 py-4 px-3 font-semibold text-sm transition-all duration-300 ${
                 currentTab === 'settings'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'text-purple-600'
+                  : 'text-gray-500 hover:text-purple-500'
               }`}
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-5 h-5" />
               通知設定
               {settings?.notificationConditions && settings.notificationConditions.length > 0 && (
-                <span className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">
+                <span className="bg-gradient-to-r from-blue-400 to-purple-500 text-white text-xs px-2.5 py-1 rounded-full shadow-md">
                   {settings.notificationConditions.filter(c => c.enabled).length}
                 </span>
+              )}
+              {currentTab === 'settings' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
               )}
             </button>
           </div>
@@ -234,37 +240,42 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
     if (matchType === 'レギュラーマッチ') {
       return {
         name: '🎯 ナワバリ',
-        color: 'bg-lime-100 text-lime-800 border-lime-200',
-        bgColor: 'bg-lime-50',
-        borderColor: 'border-lime-200'
+        color: 'bg-gradient-to-r from-match-turf/20 to-splatoon-yellow/20 text-green-800 border-match-turf/30',
+        bgColor: 'bg-gradient-to-br from-match-turf/10 via-splatoon-yellow/5 to-green-50/50',
+        borderColor: 'border-match-turf/20',
+        shadowColor: 'shadow-match-turf/10'
       };
     } else if (matchType === 'バンカラマッチ(チャレンジ)') {
       return {
         name: '⚔️ バンカラ(チャレンジ)',
-        color: 'bg-red-100 text-red-800 border-red-200',
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200'
+        color: 'bg-gradient-to-r from-match-bankara/20 to-splatoon-orange/20 text-red-800 border-match-bankara/30',
+        bgColor: 'bg-gradient-to-br from-match-bankara/10 via-splatoon-orange/5 to-red-50/50',
+        borderColor: 'border-match-bankara/20',
+        shadowColor: 'shadow-match-bankara/10'
       };
     } else if (matchType === 'バンカラマッチ(オープン)') {
       return {
         name: '🛡️ バンカラ(オープン)',
-        color: 'bg-red-100 text-red-800 border-red-200',
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200'
+        color: 'bg-gradient-to-r from-splatoon-pink/20 to-match-bankara/20 text-pink-800 border-splatoon-pink/30',
+        bgColor: 'bg-gradient-to-br from-splatoon-pink/10 via-match-bankara/5 to-pink-50/50',
+        borderColor: 'border-splatoon-pink/20',
+        shadowColor: 'shadow-splatoon-pink/10'
       };
     } else if (matchType === 'Xマッチ') {
       return {
         name: '✨ Xマッチ',
-        color: 'bg-teal-100 text-teal-800 border-teal-200',
-        bgColor: 'bg-teal-50',
-        borderColor: 'border-teal-200'
+        color: 'bg-gradient-to-r from-match-x/20 to-splatoon-cyan/20 text-teal-800 border-match-x/30',
+        bgColor: 'bg-gradient-to-br from-match-x/10 via-splatoon-cyan/5 to-teal-50/50',
+        borderColor: 'border-match-x/20',
+        shadowColor: 'shadow-match-x/10'
       };
     }
     return {
       name: matchType || 'その他',
       color: 'bg-gray-100 text-gray-800 border-gray-200',
       bgColor: 'bg-gray-50',
-      borderColor: 'border-gray-200'
+      borderColor: 'border-gray-200',
+      shadowColor: 'shadow-gray/10'
     };
   };
 
@@ -311,41 +322,43 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
 
       {/* 現在開催中のマッチ */}
       <section>
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5 text-green-600" />
-          <h2 className="text-lg font-bold text-gray-800">現在開催中</h2>
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg">
+            <Users className="w-5 h-5 text-white" />
+          </div>
+          <h2 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">現在開催中</h2>
         </div>
 
         {currentMatches.length === 0 ? (
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
+          <div className="bg-white/40 backdrop-blur-sm rounded-xl p-6 text-center border border-white/30 shadow-lg">
             <p className="text-gray-600">現在開催中のマッチはありません</p>
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-white/40 backdrop-blur-sm border border-white/30 rounded-xl p-5 shadow-xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {currentMatches.map((match, index) => {
                 const matchTypeInfo = getMatchTypeInfo(match.match_type || '');
                 const stageNames = match.stages.map(stage => stage.name).join(' / ');
                 
                 return (
-                  <div key={`current-${index}`} className={`rounded-lg border p-3 ${matchTypeInfo.bgColor} ${matchTypeInfo.borderColor}`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium border ${matchTypeInfo.color}`}>
+                  <div key={`current-${index}`} className={`rounded-xl border p-4 ${matchTypeInfo.bgColor} ${matchTypeInfo.borderColor} backdrop-blur-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${matchTypeInfo.color} backdrop-blur-sm`}>
                         {getCompactMatchTypeName(match.match_type || '')}
                       </span>
-                      <span className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                      <span className="bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs px-2 py-1 rounded-full shadow-md animate-pulse">
                         開催中
                       </span>
                     </div>
                     
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium text-gray-800 truncate">
+                    <div className="space-y-2">
+                      <div className="text-sm font-bold text-gray-800 truncate">
                         {getCompactRuleName(match.rule.name)}
                       </div>
-                      <div className="text-xs text-gray-600 leading-tight">
+                      <div className="text-xs text-gray-700 leading-relaxed font-medium">
                         {stageNames}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-600 font-medium">
                         ～{formatTime(match.end_time)}
                       </div>
                     </div>
@@ -359,46 +372,48 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
 
       {/* 今後の予定 */}
       <section>
-        <div className="flex items-center gap-2 mb-4">
-          <Calendar className="w-5 h-5 text-blue-600" />
-          <h2 className="text-lg font-bold text-gray-800">今後の予定</h2>
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
+            <Calendar className="w-5 h-5 text-white" />
+          </div>
+          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">今後の予定</h2>
         </div>
 
         {upcomingMatches.length === 0 ? (
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
+          <div className="bg-white/40 backdrop-blur-sm rounded-xl p-6 text-center border border-white/30 shadow-lg">
             <p className="text-gray-600">今後の予定が取得できませんでした</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {groupMatchesByTime(upcomingMatches.slice(0, 24)).map((timeGroup, groupIndex) => (
-              <div key={`time-group-${groupIndex}`} className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="mb-3">
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">
+              <div key={`time-group-${groupIndex}`} className="bg-white/30 backdrop-blur-sm border border-white/40 rounded-xl p-5 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">
                     {formatDate(timeGroup.startTime)}
                   </h3>
-                  <div className="text-lg font-bold text-gray-800">
+                  <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                     {formatTime(timeGroup.startTime)} - {formatTime(timeGroup.endTime)}
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {timeGroup.matches.map((match, index) => {
                     const matchTypeInfo = getMatchTypeInfo(match.match_type || '');
                     const stageNames = match.stages.map(stage => stage.name).join(' / ');
                     
                     return (
-                      <div key={`upcoming-${groupIndex}-${index}`} className={`rounded-lg border p-3 ${matchTypeInfo.bgColor} ${matchTypeInfo.borderColor}`}>
-                        <div className="mb-2">
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium border ${matchTypeInfo.color}`}>
+                      <div key={`upcoming-${groupIndex}-${index}`} className={`rounded-xl border p-4 ${matchTypeInfo.bgColor} ${matchTypeInfo.borderColor} backdrop-blur-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer`}>
+                        <div className="mb-3">
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${matchTypeInfo.color} backdrop-blur-sm`}>
                             {getCompactMatchTypeName(match.match_type || '')}
                           </span>
                         </div>
                         
-                        <div className="space-y-1">
-                          <div className="text-sm font-medium text-gray-800 truncate">
+                        <div className="space-y-2">
+                          <div className="text-sm font-bold text-gray-800 truncate">
                             {getCompactRuleName(match.rule.name)}
                           </div>
-                          <div className="text-xs text-gray-600 leading-tight">
+                          <div className="text-xs text-gray-700 leading-relaxed font-medium">
                             {stageNames}
                           </div>
                         </div>

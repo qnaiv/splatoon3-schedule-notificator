@@ -216,21 +216,18 @@ const NotificationConditionCard: React.FC<NotificationConditionCardProps> = ({
             {condition.rules.values.length > 0 && (
               <p className={condition.enabled ? 'text-gray-600' : 'text-gray-400'}>
                 <span className="font-medium">ルール:</span> {condition.rules.values.join(`, `)}
-                {condition.rules.values.length > 1 && ` (${condition.rules.operator})`}
               </p>
             )}
             
             {condition.matchTypes.values.length > 0 && (
               <p className={condition.enabled ? 'text-gray-600' : 'text-gray-400'}>
                 <span className="font-medium">マッチタイプ:</span> {condition.matchTypes.values.join(`, `)}
-                {condition.matchTypes.values.length > 1 && ` (${condition.matchTypes.operator})`}
               </p>
             )}
             
             {condition.stages.values.length > 0 && (
               <p className={condition.enabled ? 'text-gray-600' : 'text-gray-400'}>
                 <span className="font-medium">ステージ:</span> {condition.stages.values.length}件選択
-                {condition.stages.values.length > 1 && ` (${condition.stages.operator})`}
               </p>
             )}
           </div>
@@ -447,16 +444,6 @@ const ConditionSection: React.FC<ConditionSectionProps> = ({
     <div>
       <div className="flex items-center gap-4 mb-3">
         <label className="text-sm font-medium">{title}</label>
-        {selectedValues.length > 1 && (
-          <select
-            value={operator}
-            onChange={(e) => onOperatorChange(e.target.value as 'AND' | 'OR')}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            <option value="OR">いずれかを含む (OR)</option>
-            <option value="AND">すべてを含む (AND)</option>
-          </select>
-        )}
       </div>
       
       <div className={isGrid ? 'grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3' : 'space-y-2'}>
@@ -474,7 +461,7 @@ const ConditionSection: React.FC<ConditionSectionProps> = ({
       
       {selectedValues.length > 0 && (
         <p className="text-xs text-gray-500 mt-2">
-          {selectedValues.length}件選択中
+          {selectedValues.length}件選択中 (いずれかを含む)
         </p>
       )}
     </div>
