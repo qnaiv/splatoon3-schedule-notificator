@@ -342,11 +342,10 @@ async function main() {
     await registerCommands();
     console.log("✅ コマンド登録完了");
     
-    // Webhook サーバー起動
-    const port = 8000;
-    console.log(`🌐 Webhook サーバーをポート ${port} で起動中...`);
+    // Webhook サーバー起動（Deno Deployが自動でポート管理）
+    console.log("🌐 Webhook サーバーを起動中...");
     
-    Deno.serve({ port }, handleRequest);
+    Deno.serve(handleRequest);
     
     console.log("✅ Webhook Bot が正常に起動しました！");
     console.log("🔗 Webhook エンドポイントが起動中...");
