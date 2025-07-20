@@ -416,14 +416,29 @@ async function manualNotificationCheck(userId: string, channelId: string) {
     console.log("⏰ 現在時刻:", now.toISOString());
     
     for (const condition of settings.conditions) {
-      // 現在時刻以降のマッチを対象（時間条件は無視）
-      const futureMatches = allMatches.filter(match => {
+      // 現在開催中のマッチを対象
+      const currentMatches = allMatches.filter(match => {
         const startTime = new Date(match.start_time);
-        return startTime > now;
+        const endTime = new Date(match.end_time);
+        return startTime <= now && now < endTime;
+      });
+      
+      console.log(`🕐 現在開催中マッチ - 条件 "${condition.name}"`, {
+        totalMatches: allMatches.length,
+        currentMatches: currentMatches.length,
+        currentTime: now.toISOString(),
+        firstMatch: allMatches[0]?.start_time,
+        lastMatch: allMatches[allMatches.length - 1]?.start_time,
+        sampleCurrentMatch: currentMatches[0] ? {
+          start: currentMatches[0].start_time,
+          end: currentMatches[0].end_time,
+          rule: currentMatches[0].rule.name,
+          type: currentMatches[0].match_type
+        } : null
       });
       
       // ルール・ステージ・マッチタイプの条件のみチェック
-      const matchingMatches = futureMatches.filter(match => {
+      const matchingMatches = currentMatches.filter(match => {
         // ルール条件チェック
         if (condition.rules.length > 0 && !condition.rules.includes(match.rule.name)) {
           return false;
@@ -460,9 +475,9 @@ async function manualNotificationCheck(userId: string, channelId: string) {
     }
     
     if (notificationsSent === 0) {
-      await sendSimpleMessage(channelId, "📋 現在条件に合致するマッチはありません\n（今後のスケジュールを確認済み）");
+      await sendSimpleMessage(channelId, "📋 現在開催中で条件に合致するマッチはありません\n（現在時刻でのスケジュールを確認済み）");
     } else {
-      await sendSimpleMessage(channelId, `✅ ${notificationsSent}件の通知を送信しました！`);
+      await sendSimpleMessage(channelId, `✅ 現在開催中の${notificationsSent}件のマッチが条件に合致しました！`);
     }
     
     console.log(`✅ 手動チェック完了: ${notificationsSent}件送信`);
