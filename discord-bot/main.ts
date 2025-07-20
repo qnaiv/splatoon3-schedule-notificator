@@ -1,4 +1,4 @@
-import { createBot, Intents, startBot } from "https://deno.land/x/discordeno@18.0.1/mod.ts";
+import { createBot, Intents, startBot } from "https://deno.land/x/discordeno@18.0.0/mod.ts";
 import { BotSettings, UserSettings, NotificationCondition } from "./types.ts";
 import { fetchScheduleData, getAllMatches, getMatchesForNotification } from "./schedule.ts";
 import { checkNotificationConditions, sendNotification, createNotificationMessage, shouldNotify } from "./notifications.ts";

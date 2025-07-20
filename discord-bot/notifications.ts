@@ -1,4 +1,4 @@
-import { Bot } from "https://deno.land/x/discordeno@18.0.1/mod.ts";
+import { Bot } from "https://deno.land/x/discordeno@18.0.0/mod.ts";
 import { NotificationCondition, ScheduleMatch, NotificationMessage, UserSettings } from "./types.ts";
 import { formatMatchForDisplay } from "./schedule.ts";
 
