@@ -86,6 +86,10 @@ async function registerCommands() {
       {
         name: "test",
         description: "テスト通知を送信"
+      },
+      {
+        name: "check",
+        description: "今すぐ通知条件をチェックして送信"
       }
     ];
 
@@ -305,6 +309,35 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
         });
       }
       
+      case "check": {
+        const settings = userSettings.get(userId);
+        
+        if (!settings) {
+          return new Response(JSON.stringify({
+            type: 4,
+            data: {
+              content: "❌ 通知設定が見つかりません。先に `/watch` コマンドで設定してください。",
+              flags: 64
+            }
+          }), {
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
+        // 即座に通知チェックを実行
+        manualNotificationCheck(userId, channelId);
+        
+        return new Response(JSON.stringify({
+          type: 4,
+          data: {
+            content: "🔄 通知チェックを実行中...\n条件に合致するマッチがあれば通知します！",
+            flags: 64
+          }
+        }), {
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+      
       default:
         return new Response(JSON.stringify({
           type: 4,
@@ -327,6 +360,171 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
     }), {
       headers: { "Content-Type": "application/json" }
     });
+  }
+}
+
+// 手動通知チェック（時間条件無視）
+async function manualNotificationCheck(userId: string, channelId: string) {
+  console.log(`🔄 手動通知チェック開始: ユーザー ${userId}`);
+  
+  try {
+    // GitHub Pagesからスケジュールデータ取得
+    const response = await fetch("https://qnaiv.github.io/splatoon3-schedule-notificator/api/schedule.json");
+    if (!response.ok) {
+      throw new Error(`スケジュール取得失敗: ${response.status}`);
+    }
+    
+    const scheduleData = await response.json();
+    const settings = userSettings.get(userId);
+    if (!settings) {
+      console.log("❌ ユーザー設定が見つかりません");
+      return;
+    }
+    
+    // 全マッチタイプのスケジュールを取得
+    const allMatches = [
+      ...(scheduleData.data.result.regular || []).map((m: any) => ({ ...m, match_type: "レギュラーマッチ" })),
+      ...(scheduleData.data.result.bankara_challenge || []).map((m: any) => ({ ...m, match_type: "バンカラマッチ(チャレンジ)" })),
+      ...(scheduleData.data.result.bankara_open || []).map((m: any) => ({ ...m, match_type: "バンカラマッチ(オープン)" })),
+      ...(scheduleData.data.result.x || []).map((m: any) => ({ ...m, match_type: "Xマッチ" }))
+    ];
+    
+    let notificationsSent = 0;
+    const now = new Date();
+    
+    for (const condition of settings.conditions) {
+      // 現在時刻以降のマッチを対象（時間条件は無視）
+      const futureMatches = allMatches.filter(match => {
+        const startTime = new Date(match.start_time);
+        return startTime > now;
+      });
+      
+      // ルール・ステージ・マッチタイプの条件のみチェック
+      const matchingMatches = futureMatches.filter(match => {
+        // ルール条件チェック
+        if (condition.rules.length > 0 && !condition.rules.includes(match.rule.name)) {
+          return false;
+        }
+        
+        // マッチタイプ条件チェック
+        if (condition.matchTypes.length > 0 && !condition.matchTypes.includes(match.match_type)) {
+          return false;
+        }
+        
+        // ステージ条件チェック
+        if (condition.stages.length > 0) {
+          const matchStageIds = match.stages.map((stage: any) => stage.id);
+          const hasMatchingStage = condition.stages.some(stageId => 
+            matchStageIds.includes(stageId)
+          );
+          if (!hasMatchingStage) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+      
+      console.log(`🔍 条件 "${condition.name}": ${matchingMatches.length}件のマッチ`);
+      
+      // 最初の3件まで通知（スパム防止）
+      for (const match of matchingMatches.slice(0, 3)) {
+        const success = await sendMatchNotification(settings, condition, match);
+        if (success) {
+          notificationsSent++;
+        }
+      }
+    }
+    
+    if (notificationsSent === 0) {
+      await sendSimpleMessage(channelId, "📋 現在条件に合致するマッチはありません\n（今後のスケジュールを確認済み）");
+    } else {
+      await sendSimpleMessage(channelId, `✅ ${notificationsSent}件の通知を送信しました！`);
+    }
+    
+    console.log(`✅ 手動チェック完了: ${notificationsSent}件送信`);
+  } catch (error) {
+    console.error("❌ 手動通知チェックエラー:", error);
+    await sendSimpleMessage(channelId, "❌ 通知チェック中にエラーが発生しました");
+  }
+}
+
+// マッチ通知送信
+async function sendMatchNotification(userSettings: UserSettings, condition: any, match: any): Promise<boolean> {
+  try {
+    const stages = match.stages.map((stage: any) => stage.name).join(", ");
+    const startTime = new Date(match.start_time).toLocaleString("ja-JP");
+    
+    const embed = {
+      title: "🦑 スプラトゥーン3 通知",
+      description: `**${condition.name}** の条件に合致しました！`,
+      fields: [
+        {
+          name: "ルール",
+          value: match.rule.name,
+          inline: true
+        },
+        {
+          name: "マッチタイプ", 
+          value: match.match_type,
+          inline: true
+        },
+        {
+          name: "ステージ",
+          value: stages,
+          inline: false
+        },
+        {
+          name: "開始時刻",
+          value: startTime,
+          inline: false
+        }
+      ],
+      color: 0x00ff88,
+      timestamp: new Date().toISOString(),
+      footer: {
+        text: "Splatoon3 Schedule Bot"
+      }
+    };
+
+    const response = await fetch(`https://discord.com/api/v10/channels/${userSettings.channelId}/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bot ${DISCORD_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        embeds: [embed]
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error(`❌ 通知送信失敗:`, error);
+      return false;
+    }
+
+    console.log(`✅ 通知送信成功: "${condition.name}"`);
+    return true;
+  } catch (error) {
+    console.error(`❌ 通知送信エラー:`, error);
+    return false;
+  }
+}
+
+// シンプルメッセージ送信
+async function sendSimpleMessage(channelId: string, content: string): Promise<void> {
+  try {
+    await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bot ${DISCORD_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ content })
+    });
+  } catch (error) {
+    console.error("メッセージ送信エラー:", error);
   }
 }
 
