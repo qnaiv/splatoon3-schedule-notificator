@@ -29,11 +29,22 @@ const bot = createBot({
     },
     
     interactionCreate: async (interaction) => {
-      if (!interaction.data) return;
+      console.log("🔧 Debug: インタラクション受信", {
+        type: interaction.type,
+        hasData: !!interaction.data,
+        dataName: interaction.data?.name
+      });
+      
+      if (!interaction.data) {
+        console.log("❌ Debug: interaction.data が存在しません");
+        return;
+      }
       
       const command = interaction.data.name;
       const userId = interaction.user.id.toString();
       const channelId = interaction.channelId?.toString();
+      
+      console.log("🔧 Debug: コマンド処理開始", { command, userId, channelId });
       
       if (!channelId) {
         await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
@@ -141,9 +152,12 @@ const bot = createBot({
           }
           
           case "test": {
+            console.log("🔧 Debug: testコマンド実行開始");
             const settings = userSettings.get(userId);
+            console.log("🔧 Debug: ユーザー設定:", !!settings);
             
             if (!settings) {
+              console.log("🔧 Debug: 設定なし応答送信中...");
               await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
                 type: 4,
                 data: {
@@ -151,6 +165,7 @@ const bot = createBot({
                   flags: 64
                 }
               });
+              console.log("✅ Debug: 設定なし応答送信完了");
               return;
             }
             
@@ -183,13 +198,23 @@ const bot = createBot({
         }
       } catch (error) {
         console.error("❌ Command execution error:", error);
-        await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
-          type: 4,
-          data: {
-            content: "❌ コマンドの実行中にエラーが発生しました。",
-            flags: 64
-          }
+        console.error("❌ Error details:", {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
         });
+        
+        try {
+          await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
+            type: 4,
+            data: {
+              content: "❌ コマンドの実行中にエラーが発生しました。",
+              flags: 64
+            }
+          });
+        } catch (responseError) {
+          console.error("❌ Failed to send error response:", responseError);
+        }
       }
     }
   }
