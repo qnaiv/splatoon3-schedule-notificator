@@ -39,6 +39,6 @@ jobs:
         with:
           project: "qnaiv-splatoon3-s-12"
           entrypoint: "discord-bot/main.ts"
-          root: "dist"
+          root: ""
           
           
