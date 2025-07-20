@@ -22,13 +22,21 @@
 1. [Discord Developer Portal](https://discord.com/developers/applications)にアクセス
 2. "New Application"をクリック
 3. アプリケーション名を入力（例: "Splatoon3 Schedule Bot"）
+4. **Application ID取得**:
+   - "General Information" ページで "APPLICATION ID" をコピー
+   - これも後で環境変数として使用
 
 ### 2. Bot設定
 
 1. 左メニューから "Bot" を選択
-2. "Add Bot" をクリック
-3. Tokenをコピー（後で使用）
-4. "MESSAGE CONTENT INTENT" を有効化
+2. **Token取得**:
+   - "Reset Token" ボタンがある場合はクリック
+   - 表示される Token をコピー（後で使用）
+   - ⚠️ Token は一度しか表示されないので必ず保存
+3. **Bot権限設定**:
+   - "Privileged Gateway Intents" セクションを探す
+   - "MESSAGE CONTENT INTENT" を有効化（存在する場合）
+   - "SERVER MEMBERS INTENT" と "PRESENCE INTENT" は不要
 
 ### 3. OAuth2設定
 
@@ -101,11 +109,42 @@ discord-bot/
 - 最大同時ユーザー数: Deno Deployの制限に依存
 - 通知頻度: 30分間隔での確認
 
+## Discord設定の詳細
+
+### 現在のDiscord Developer Portal画面での確認項目
+
+**General Information**:
+- APPLICATION ID が表示されている
+- PUBLIC KEY も表示される（今回は不要）
+
+**Bot**:
+- Token セクション: "Reset Token" または "Copy" ボタン
+- Privileged Gateway Intents: MESSAGE CONTENT INTENT など
+- Authorization Flow: "Requires OAuth2 Code Grant" は無効のまま
+
+**OAuth2 > General**:
+- CLIENT ID（APPLICATION IDと同じ）
+- CLIENT SECRET（今回は不要）
+
+**OAuth2 > URL Generator**:
+- Scopes: bot と applications.commands を選択
+- Bot Permissions: Send Messages, Use Slash Commands, Embed Links
+
 ## トラブルシューティング
+
+### "MESSAGE CONTENT INTENT" が見つからない場合
+- このオプションは 2022年以降に追加されました
+- 見つからない場合は設定なしで進めてください
+- スラッシュコマンドのみ使用するため必須ではありません
+
+### Token が取得できない
+- "Reset Token" をクリックして新しいTokenを生成
+- 生成後すぐにコピーして保存（再表示されません）
 
 ### Bot が応答しない
 - TOKEN と APPLICATION_ID が正しく設定されているか確認
 - Bot にメッセージ送信権限があるか確認
+- サーバーにBotが正しく招待されているか確認
 
 ### 通知が届かない
 - `/status` で設定を確認
@@ -115,3 +154,4 @@ discord-bot/
 ### コマンドが表示されない
 - Bot を再起動してコマンド登録を確認
 - サーバーでスラッシュコマンドが有効になっているか確認
+- Botに "applications.commands" スコープが付与されているか確認
