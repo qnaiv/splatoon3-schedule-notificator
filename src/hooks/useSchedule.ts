@@ -6,7 +6,7 @@ const API_CONFIG = {
   baseUrl: import.meta.env.VITE_API_BASE_URL || 
     (import.meta.env.PROD 
       ? 'https://qnaiv.github.io/splatoon3-schedule-notificator' 
-      : ''),
+      : 'http://localhost:3000'),
   scheduleEndpoint: '/api/schedule.json',
   currentEndpoint: '/api/current.json'
 };

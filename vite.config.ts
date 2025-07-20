@@ -31,46 +31,46 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        scope: process.env.NODE_ENV === 'production' ? '/splatoon3-schedule-notificator/' : '/',
+        start_url: process.env.NODE_ENV === 'production' ? '/splatoon3-schedule-notificator/' : '/',
         icons: [
           {
-            src: '/icons/icon-72x72.png',
+            src: `${process.env.NODE_ENV === 'production' ? '/splatoon3-schedule-notificator' : ''}/icons/icon-72x72.png`,
             sizes: '72x72',
             type: 'image/png'
           },
           {
-            src: '/icons/icon-96x96.png',
+            src: `${process.env.NODE_ENV === 'production' ? '/splatoon3-schedule-notificator' : ''}/icons/icon-96x96.png`,
             sizes: '96x96',
             type: 'image/png'
           },
           {
-            src: '/icons/icon-128x128.png',
+            src: `${process.env.NODE_ENV === 'production' ? '/splatoon3-schedule-notificator' : ''}/icons/icon-128x128.png`,
             sizes: '128x128',
             type: 'image/png'
           },
           {
-            src: '/icons/icon-144x144.png',
+            src: `${process.env.NODE_ENV === 'production' ? '/splatoon3-schedule-notificator' : ''}/icons/icon-144x144.png`,
             sizes: '144x144',
             type: 'image/png'
           },
           {
-            src: '/icons/icon-152x152.png',
+            src: `${process.env.NODE_ENV === 'production' ? '/splatoon3-schedule-notificator' : ''}/icons/icon-152x152.png`,
             sizes: '152x152',
             type: 'image/png'
           },
           {
-            src: '/icons/icon-192x192.png',
+            src: `${process.env.NODE_ENV === 'production' ? '/splatoon3-schedule-notificator' : ''}/icons/icon-192x192.png`,
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/icons/icon-384x384.png',
+            src: `${process.env.NODE_ENV === 'production' ? '/splatoon3-schedule-notificator' : ''}/icons/icon-384x384.png`,
             sizes: '384x384',
             type: 'image/png'
           },
           {
-            src: '/icons/icon-512x512.png',
+            src: `${process.env.NODE_ENV === 'production' ? '/splatoon3-schedule-notificator' : ''}/icons/icon-512x512.png`,
             sizes: '512x512',
             type: 'image/png'
           }
@@ -78,7 +78,7 @@ export default defineConfig({
       }
     })
   ],
-  base: '/',
+  base: process.env.NODE_ENV === 'production' ? '/splatoon3-schedule-notificator/' : '/',
   server: {
     port: 3000
   }
