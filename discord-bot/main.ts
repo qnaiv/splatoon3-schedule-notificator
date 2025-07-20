@@ -1,4 +1,4 @@
-import { createBot, Intents, startBot } from "https://deno.land/x/discordeno@18.0.0/mod.ts";
+import { createBot, Intents, startBot, verifySignature } from "https://deno.land/x/discordeno@18.0.0/mod.ts";
 import { BotSettings, UserSettings, NotificationCondition } from "./types.ts";
 import { fetchScheduleData, getAllMatches, getMatchesForNotification } from "./schedule.ts";
 import { checkNotificationConditions, sendNotification, createNotificationMessage, shouldNotify } from "./notifications.ts";
@@ -6,11 +6,18 @@ import { checkNotificationConditions, sendNotification, createNotificationMessag
 // 環境変数の取得
 const DISCORD_TOKEN = Deno.env.get("DISCORD_TOKEN");
 const DISCORD_APPLICATION_ID = Deno.env.get("DISCORD_APPLICATION_ID");
+const DISCORD_PUBLIC_KEY = Deno.env.get("DISCORD_PUBLIC_KEY");
 
 if (!DISCORD_TOKEN || !DISCORD_APPLICATION_ID) {
   console.error("❌ 環境変数が設定されていません:");
   console.error("  DISCORD_TOKEN:", !!DISCORD_TOKEN ? "✅" : "❌");
   console.error("  DISCORD_APPLICATION_ID:", !!DISCORD_APPLICATION_ID ? "✅" : "❌");
+  console.error("  DISCORD_PUBLIC_KEY:", !!DISCORD_PUBLIC_KEY ? "✅" : "❌");
+  
+  if (!DISCORD_PUBLIC_KEY) {
+    console.log("💡 DISCORD_PUBLIC_KEY は Discord Developer Portal の General Information にあります");
+  }
+  
   Deno.exit(1);
 }
 
@@ -304,19 +311,126 @@ async function checkNotifications() {
 // Deno Cron（30分ごと）
 Deno.cron("notification-check", "*/30 * * * *", checkNotifications);
 
+// Webhook サーバー
+async function handleRequest(request: Request): Promise<Response> {
+  if (request.method === "POST") {
+    const signature = request.headers.get("x-signature-ed25519");
+    const timestamp = request.headers.get("x-signature-timestamp");
+    const body = await request.text();
+
+    if (!signature || !timestamp || !DISCORD_PUBLIC_KEY) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    try {
+      const isValid = await verifySignature(body, signature, timestamp, DISCORD_PUBLIC_KEY);
+      if (!isValid) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
+      const interaction = JSON.parse(body);
+      console.log("🔧 Debug: Webhook インタラクション受信", interaction.type);
+
+      // Ping応答
+      if (interaction.type === 1) {
+        return new Response(JSON.stringify({ type: 1 }), {
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+
+      // スラッシュコマンド処理
+      if (interaction.type === 2) {
+        return await handleSlashCommand(interaction);
+      }
+
+      return new Response("Unknown interaction type", { status: 400 });
+    } catch (error) {
+      console.error("❌ Webhook処理エラー:", error);
+      return new Response("Internal Server Error", { status: 500 });
+    }
+  }
+
+  return new Response("Method not allowed", { status: 405 });
+}
+
+// スラッシュコマンド処理
+async function handleSlashCommand(interaction: any): Promise<Response> {
+  const command = interaction.data.name;
+  const userId = interaction.member?.user?.id || interaction.user?.id;
+  const channelId = interaction.channel_id;
+
+  console.log("🔧 Debug: コマンド処理", { command, userId, channelId });
+
+  try {
+    switch (command) {
+      case "test": {
+        const settings = userSettings.get(userId);
+        
+        if (!settings) {
+          return new Response(JSON.stringify({
+            type: 4,
+            data: {
+              content: "❌ 通知設定が見つかりません。先に `/watch` コマンドで設定してください。",
+              flags: 64
+            }
+          }), {
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
+        return new Response(JSON.stringify({
+          type: 4,
+          data: {
+            content: "🧪 テスト通知を送信します...",
+            flags: 64
+          }
+        }), {
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+      
+      default:
+        return new Response(JSON.stringify({
+          type: 4,
+          data: {
+            content: "❌ 未知のコマンドです。",
+            flags: 64
+          }
+        }), {
+          headers: { "Content-Type": "application/json" }
+        });
+    }
+  } catch (error) {
+    console.error("❌ コマンド処理エラー:", error);
+    return new Response(JSON.stringify({
+      type: 4,
+      data: {
+        content: "❌ コマンドの実行中にエラーが発生しました。",
+        flags: 64
+      }
+    }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+}
+
 // Bot起動
 async function main() {
   console.log("🚀 Splatoon3 Discord Bot を起動中...");
   console.log("🔧 Debug: 環境変数確認");
   console.log("DISCORD_TOKEN exists:", !!DISCORD_TOKEN);
   console.log("DISCORD_APPLICATION_ID exists:", !!DISCORD_APPLICATION_ID);
+  console.log("DISCORD_PUBLIC_KEY exists:", !!DISCORD_PUBLIC_KEY);
   
   try {
-    await startBot(bot);
-    console.log("✅ Bot接続完了");
-    
     await registerCommands();
     console.log("✅ コマンド登録完了");
+    
+    // Webhook サーバー起動
+    const port = 8000;
+    console.log(`🌐 Webhook サーバーをポート ${port} で起動中...`);
+    
+    Deno.serve({ port }, handleRequest);
     
     console.log("✅ Bot が正常に起動しました！");
     console.log("📅 30分ごとに通知チェックが実行されます");
