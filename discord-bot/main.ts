@@ -20,7 +20,8 @@ const userSettings = new Map<string, UserSettings>();
 // Botの作成
 const bot = createBot({
   token: DISCORD_TOKEN,
-  intents: Intents.Guilds,
+  intents: Intents.Guilds | Intents.GuildMessages,
+  applicationId: BigInt(DISCORD_APPLICATION_ID),
   events: {
     ready: () => {
       console.log(`🤖 Bot がオンラインになりました！`);
@@ -224,8 +225,9 @@ async function registerCommands() {
       }
     ];
 
-    await bot.helpers.upsertGlobalApplicationCommands(commands);
+    await bot.helpers.upsertGlobalApplicationCommands(commands, DISCORD_APPLICATION_ID);
     console.log("✅ スラッシュコマンドを登録しました");
+    console.log("🔧 Debug: 登録したコマンド数:", commands.length);
   } catch (error) {
     console.error("❌ コマンド登録エラー:", error);
   }
