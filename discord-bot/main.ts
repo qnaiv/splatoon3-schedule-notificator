@@ -276,12 +276,23 @@ Deno.cron("notification-check", "*/30 * * * *", checkNotifications);
 // Bot起動
 async function main() {
   console.log("🚀 Splatoon3 Discord Bot を起動中...");
+  console.log("🔧 Debug: 環境変数確認");
+  console.log("DISCORD_TOKEN exists:", !!DISCORD_TOKEN);
+  console.log("DISCORD_APPLICATION_ID exists:", !!DISCORD_APPLICATION_ID);
   
-  await startBot(bot);
-  await registerCommands();
-  
-  console.log("✅ Bot が正常に起動しました！");
-  console.log("📅 30分ごとに通知チェックが実行されます");
+  try {
+    await startBot(bot);
+    console.log("✅ Bot接続完了");
+    
+    await registerCommands();
+    console.log("✅ コマンド登録完了");
+    
+    console.log("✅ Bot が正常に起動しました！");
+    console.log("📅 30分ごとに通知チェックが実行されます");
+  } catch (error) {
+    console.error("❌ Bot起動エラー:", error);
+    throw error;
+  }
 }
 
 if (import.meta.main) {
