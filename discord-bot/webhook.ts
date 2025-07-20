@@ -369,17 +369,31 @@ async function manualNotificationCheck(userId: string, channelId: string) {
   
   try {
     // GitHub Pagesからスケジュールデータ取得
+    console.log("📡 スケジュールデータ取得中...");
     const response = await fetch("https://qnaiv.github.io/splatoon3-schedule-notificator/api/schedule.json");
     if (!response.ok) {
       throw new Error(`スケジュール取得失敗: ${response.status}`);
     }
     
     const scheduleData = await response.json();
+    console.log("✅ スケジュールデータ取得成功", {
+      lastUpdated: scheduleData.lastUpdated,
+      hasRegular: !!scheduleData.data.result.regular,
+      hasX: !!scheduleData.data.result.x,
+      hasBankara: !!scheduleData.data.result.bankara_challenge
+    });
+    
     const settings = userSettings.get(userId);
     if (!settings) {
       console.log("❌ ユーザー設定が見つかりません");
       return;
     }
+    
+    console.log("👤 ユーザー設定確認", {
+      userId,
+      conditionsCount: settings.conditions.length,
+      conditions: settings.conditions.map(c => ({ name: c.name, enabled: c.enabled }))
+    });
     
     // 全マッチタイプのスケジュールを取得
     const allMatches = [
@@ -389,8 +403,17 @@ async function manualNotificationCheck(userId: string, channelId: string) {
       ...(scheduleData.data.result.x || []).map((m: any) => ({ ...m, match_type: "Xマッチ" }))
     ];
     
+    console.log("🎮 全マッチ確認", {
+      totalMatches: allMatches.length,
+      regularCount: scheduleData.data.result.regular?.length || 0,
+      xCount: scheduleData.data.result.x?.length || 0,
+      bankaraChallenge: scheduleData.data.result.bankara_challenge?.length || 0,
+      bankaraOpen: scheduleData.data.result.bankara_open?.length || 0
+    });
+    
     let notificationsSent = 0;
     const now = new Date();
+    console.log("⏰ 現在時刻:", now.toISOString());
     
     for (const condition of settings.conditions) {
       // 現在時刻以降のマッチを対象（時間条件は無視）
