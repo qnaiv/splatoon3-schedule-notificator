@@ -23,18 +23,15 @@ const bot = createBot({
   intents: Intents.Guilds | Intents.GuildMessages,
   applicationId: BigInt(DISCORD_APPLICATION_ID),
   events: {
-    ready: (payload, rawPayload) => {
+    ready: () => {
       console.log(`🤖 Bot がオンラインになりました！`);
       console.log(`📊 接続完了`);
     },
     
-    interactionCreate: async (bot, interaction) => {
-      console.log("🔧 Debug: インタラクション受信", {
-        type: interaction.type,
-        hasData: !!interaction.data,
-        dataName: interaction.data?.name,
-        fullInteraction: JSON.stringify(interaction, null, 2)
-      });
+    interactionCreate: async (interaction) => {
+      console.log("🔧 Debug: インタラクション受信");
+      console.log("🔧 Debug: interaction type:", interaction.type);
+      console.log("🔧 Debug: interaction data:", interaction.data);
       
       // インタラクションタイプが2（Application Command）でない場合はスキップ
       if (interaction.type !== 2) {
@@ -48,7 +45,7 @@ const bot = createBot({
       }
       
       const command = interaction.data.name;
-      const userId = interaction.user.id.toString();
+      const userId = interaction.user?.id?.toString();
       const channelId = interaction.channelId?.toString();
       
       console.log("🔧 Debug: コマンド処理開始", { command, userId, channelId });
