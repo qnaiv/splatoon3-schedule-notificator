@@ -20,11 +20,11 @@ const userSettings = new Map<string, UserSettings>();
 // Botの作成
 const bot = createBot({
   token: DISCORD_TOKEN,
-  intents: Intents.Guilds | Intents.GuildMessages,
+  intents: Intents.Guilds,
   events: {
-    ready: (payload) => {
-      console.log(`🤖 ${payload.user.username} がオンラインになりました！`);
-      console.log(`📊 ${payload.guilds.length} のサーバーに参加中`);
+    ready: () => {
+      console.log(`🤖 Bot がオンラインになりました！`);
+      console.log(`📊 接続完了`);
     },
     
     interactionCreate: async (interaction) => {
