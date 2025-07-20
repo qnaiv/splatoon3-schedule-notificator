@@ -19,6 +19,46 @@ if (!DISCORD_TOKEN || !DISCORD_APPLICATION_ID || !DISCORD_PUBLIC_KEY) {
 // ユーザー設定を保存するMap（メモリ内）
 const userSettings = new Map<string, UserSettings>();
 
+// Discord署名検証関数（手動実装）
+async function verifyDiscordSignature(
+  body: string,
+  signature: string,
+  timestamp: string,
+  publicKey: string
+): Promise<boolean> {
+  try {
+    const enc = new TextEncoder();
+    const algorithm = { name: "Ed25519", namedCurve: "Ed25519" };
+    
+    // 公開鍵をインポート
+    const keyData = new Uint8Array(
+      publicKey.match(/.{2}/g)?.map(byte => parseInt(byte, 16)) || []
+    );
+    
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      algorithm,
+      false,
+      ["verify"]
+    );
+    
+    // 署名をデコード
+    const sigData = new Uint8Array(
+      signature.match(/.{2}/g)?.map(byte => parseInt(byte, 16)) || []
+    );
+    
+    // タイムスタンプ + ボディ でメッセージ作成
+    const message = enc.encode(timestamp + body);
+    
+    // 署名検証
+    return await crypto.subtle.verify(algorithm, cryptoKey, sigData, message);
+  } catch (error) {
+    console.error("署名検証エラー:", error);
+    return false;
+  }
+}
+
 // スラッシュコマンドの登録
 async function registerCommands() {
   try {
@@ -72,18 +112,32 @@ async function registerCommands() {
 
 // Webhook サーバー
 async function handleRequest(request: Request): Promise<Response> {
+  console.log("🔧 Debug: リクエスト受信", request.method, request.url);
+  
   if (request.method === "POST") {
     const signature = request.headers.get("x-signature-ed25519");
     const timestamp = request.headers.get("x-signature-timestamp");
     const body = await request.text();
 
+    console.log("🔧 Debug: Header確認", {
+      hasSignature: !!signature,
+      hasTimestamp: !!timestamp,
+      bodyLength: body.length
+    });
+
     if (!signature || !timestamp) {
+      console.log("❌ Debug: 署名またはタイムスタンプが見つかりません");
       return new Response("Unauthorized", { status: 401 });
     }
 
     try {
-      const isValid = await verifySignature(body, signature, timestamp, DISCORD_PUBLIC_KEY);
+      // 手動署名検証（Discordenoの代替実装）
+      const isValid = await verifyDiscordSignature(body, signature, timestamp, DISCORD_PUBLIC_KEY);
+      
+      console.log("🔧 Debug: 署名検証結果", isValid);
+      
       if (!isValid) {
+        console.log("❌ Debug: 署名検証に失敗");
         return new Response("Unauthorized", { status: 401 });
       }
 
@@ -107,6 +161,14 @@ async function handleRequest(request: Request): Promise<Response> {
       console.error("❌ Webhook処理エラー:", error);
       return new Response("Internal Server Error", { status: 500 });
     }
+  }
+
+  // GET リクエスト（接続テスト用）
+  if (request.method === "GET") {
+    console.log("🔧 Debug: GET リクエスト受信 - 接続テスト");
+    return new Response("Discord Webhook Bot is running!", {
+      headers: { "Content-Type": "text/plain" }
+    });
   }
 
   return new Response("Method not allowed", { status: 405 });
@@ -287,7 +349,7 @@ async function main() {
     Deno.serve({ port }, handleRequest);
     
     console.log("✅ Webhook Bot が正常に起動しました！");
-    console.log("🔗 エンドポイント: https://your-deno-deploy-url.deno.dev/");
+    console.log("🔗 Webhook エンドポイントが起動中...");
   } catch (error) {
     console.error("❌ Bot起動エラー:", error);
     throw error;
