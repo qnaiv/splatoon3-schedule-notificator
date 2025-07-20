@@ -1,5 +1,4 @@
-import { createBot, Intents, startBot } from "@discordeno/bot";
-import { encode } from "@std/encoding/base64.ts";
+import { createBot, Intents, startBot } from "https://deno.land/x/discordeno@19.0.0/mod.ts";
 import { BotSettings, UserSettings, NotificationCondition } from "./types.ts";
 import { fetchScheduleData, getAllMatches, getMatchesForNotification } from "./schedule.ts";
 import { checkNotificationConditions, sendNotification, createNotificationMessage, shouldNotify } from "./notifications.ts";
@@ -64,9 +63,7 @@ const bot = createBot({
 
             try {
               // Base64デコードしてJSON解析
-              const decoded = new TextDecoder().decode(
-                new Uint8Array([...atob(settingsParam)].map(c => c.charCodeAt(0)))
-              );
+              const decoded = atob(settingsParam);
               const settings: BotSettings = JSON.parse(decoded);
               
               // ユーザー設定を保存

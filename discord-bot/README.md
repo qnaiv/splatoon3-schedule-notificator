@@ -52,12 +52,25 @@
 
 1. [Deno Deploy](https://deno.com/deploy)にアクセス
 2. GitHubアカウントでサインイン
-3. 新しいプロジェクトを作成
-4. このリポジトリを選択
-5. エントリーポイント: `discord-bot/main.ts`
-6. 環境変数を設定:
-   - `DISCORD_TOKEN`: Bot Token
-   - `DISCORD_APPLICATION_ID`: Application ID
+3. **新しいプロジェクトを作成**:
+   - "New Project" をクリック
+   - "Deploy from GitHub repository" を選択
+   - リポジトリ: `qnaiv/splatoon3-schedule-notificator` を選択
+   - ブランチ: `main`
+   - エントリーポイント: `discord-bot/main.ts`
+4. **環境変数を設定**:
+   - Settings > Environment Variables
+   - `DISCORD_TOKEN`: Discord Botで取得したToken
+   - `DISCORD_APPLICATION_ID`: Discord Applicationで取得したID
+5. **デプロイ**:
+   - "Deploy" ボタンをクリック
+   - 初回デプロイ完了まで待機
+
+### 5. デプロイ確認
+
+1. Deno Deployのダッシュボードでデプロイ状況を確認
+2. ログで "Bot がオンラインになりました！" メッセージを確認
+3. Discordサーバーでスラッシュコマンドが表示されるか確認
 
 ## 環境変数
 
