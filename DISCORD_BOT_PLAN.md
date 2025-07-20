@@ -148,27 +148,27 @@ docs/  (GitHub Pages)
   - [x] ReactアプリのビルドとデプロイPWA対応
   - [x] スケジュール表示WebUIの公開
 
-### Phase 1: Discord Bot基盤
-- [ ] Deno Deploy プロジェクト作成
-- [ ] Discord Application & Bot作成
-- [ ] 基本的なスラッシュコマンド実装
-  - [ ] `/watch <設定文字列>` - 通知設定
-  - [ ] `/status` - 現在の設定確認
-  - [ ] `/stop` - 通知停止
-  - [ ] `/test` - 通知テスト
-- [ ] 設定データの保存・管理機能
+### Phase 1: Discord Bot基盤 🔄 **進行中**
+- [x] Deno Deploy プロジェクト作成
+- [ ] Discord Application & Bot作成（手動セットアップ必要）
+- [x] 基本的なスラッシュコマンド実装
+  - [x] `/watch <設定文字列>` - 通知設定
+  - [x] `/status` - 現在の設定確認
+  - [x] `/stop` - 通知停止
+  - [x] `/test` - 通知テスト
+- [x] 設定データの保存・管理機能（メモリ内）
 
-### Phase 2: スケジュール処理
-- [ ] GitHub Pages API連携
-- [ ] スケジュールデータの解析・処理
-- [ ] 通知条件マッチング機能
-- [ ] 通知タイミング計算（n分前の判定）
+### Phase 2: スケジュール処理 ✅ **完了**
+- [x] GitHub Pages API連携
+- [x] スケジュールデータの解析・処理
+- [x] 通知条件マッチング機能
+- [x] 通知タイミング計算（n分前の判定）
 
-### Phase 3: 定期実行・通知
-- [ ] Deno.cronによる定期チェック機能
-- [ ] Discord通知送信機能
-- [ ] エラーハンドリング・ログ機能
-- [ ] レート制限対応
+### Phase 3: 定期実行・通知 ✅ **完了**
+- [x] Deno.cronによる定期チェック機能（30分ごと）
+- [x] Discord通知送信機能
+- [x] エラーハンドリング・ログ機能
+- [x] レート制限対応
 
 ### Phase 4: WebUI連携
 - [ ] WebUI側にDiscord連携UI追加
@@ -325,13 +325,22 @@ const embed = {
 
 ### 📊 進捗サマリー
 - **Phase 0**: ✅ 完了（データ配信基盤構築）
-- **Phase 1**: 🔄 次のフェーズ（Discord Bot基盤）
-- **全体進捗**: 20% 完了
+- **Phase 1**: 🔄 進行中（Discord Bot基盤）
+- **Phase 2**: ✅ 完了（スケジュール処理）
+- **Phase 3**: ✅ 完了（定期実行・通知）
+- **Phase 4**: ⏸️ 待機中（WebUI連携）
+- **全体進捗**: 75% 完了
 
 ### 🔗 稼働中のサービス
 - **WebUI**: https://qnaiv.github.io/splatoon3-schedule-notificator/
 - **API**: https://qnaiv.github.io/splatoon3-schedule-notificator/api/schedule.json
 - **GitHub Actions**: 2時間ごと自動実行中
+
+### 🤖 Discord Bot実装完了
+- **ファイル構成**: `discord-bot/` ディレクトリに全ファイル配置完了
+- **主要機能**: スラッシュコマンド、定期通知、設定管理
+- **デプロイ準備**: Deno Deploy対応済み
+- **セットアップガイド**: `discord-bot/README.md` 参照
 
 ### 📈 技術的成果
 - GitHub Pagesでスケジュール表示WebUIを公開

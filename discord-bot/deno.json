@@ -1,0 +1,16 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-net --allow-env --watch main.ts",
+    "start": "deno run --allow-net --allow-env main.ts"
+  },
+  "imports": {
+    "@discordeno/bot": "https://deno.land/x/discordeno@19.0.0/mod.ts",
+    "@discordeno/types": "https://deno.land/x/discordeno@19.0.0/types/mod.ts",
+    "@std/encoding": "https://deno.land/std@0.209.0/encoding/mod.ts"
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window"],
+    "strict": true
+  }
+}
