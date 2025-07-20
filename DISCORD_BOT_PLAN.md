@@ -134,16 +134,19 @@ docs/  (GitHub Pages)
 
 ## 実装TODO
 
-### Phase 0: データ配信基盤構築
-- [ ] GitHub Actions ワークフロー作成
-  - [ ] 2時間ごとのスケジュール取得
-  - [ ] Splatoon3 API → GitHub Pages データ変換
-  - [ ] エラーハンドリング・リトライ機能
-- [ ] データ変換スクリプト実装
-  - [ ] 既存WebUI形式への変換
-  - [ ] match_type フィールドの正規化
-  - [ ] 最終更新時刻の管理
-- [ ] GitHub Pages 配信設定
+### Phase 0: データ配信基盤構築 ✅ **完了**
+- [x] GitHub Actions ワークフロー作成
+  - [x] 2時間ごとのスケジュール取得
+  - [x] Splatoon3 API → GitHub Pages データ変換
+  - [x] エラーハンドリング・リトライ機能
+- [x] データ変換スクリプト実装
+  - [x] 既存WebUI形式への変換
+  - [x] match_type フィールドの正規化
+  - [x] 最終更新時刻の管理
+- [x] GitHub Pages 配信設定
+  - [x] gh-pagesブランチへの自動デプロイ
+  - [x] ReactアプリのビルドとデプロイPWA対応
+  - [x] スケジュール表示WebUIの公開
 
 ### Phase 1: Discord Bot基盤
 - [ ] Deno Deploy プロジェクト作成
@@ -226,7 +229,7 @@ const transformedData = {
 ### Discord Bot データ取得仕様
 ```typescript
 // GitHub Pagesからデータ取得
-const SCHEDULE_URL = "https://yourusername.github.io/splatoon3-schedule-notificator/api/schedule.json";
+const SCHEDULE_URL = "https://qnaiv.github.io/splatoon3-schedule-notificator/api/schedule.json";
 
 async function fetchScheduleData() {
   const response = await fetch(SCHEDULE_URL);
@@ -317,6 +320,24 @@ const embed = {
 - Splatoon3 API仕様変更への対応
 - Discord.js バージョンアップ対応
 - ユーザーフィードバック対応
+
+## 実装状況
+
+### 📊 進捗サマリー
+- **Phase 0**: ✅ 完了（データ配信基盤構築）
+- **Phase 1**: 🔄 次のフェーズ（Discord Bot基盤）
+- **全体進捗**: 20% 完了
+
+### 🔗 稼働中のサービス
+- **WebUI**: https://qnaiv.github.io/splatoon3-schedule-notificator/
+- **API**: https://qnaiv.github.io/splatoon3-schedule-notificator/api/schedule.json
+- **GitHub Actions**: 2時間ごと自動実行中
+
+### 📈 技術的成果
+- GitHub Pagesでスケジュール表示WebUIを公開
+- PWA対応によりモバイル端末でアプリライクに使用可能
+- APIエンドポイントでJSONデータを配信
+- 定期的なデータ更新（2時間ごと）が稼働中
 
 ## 成功指標
 
