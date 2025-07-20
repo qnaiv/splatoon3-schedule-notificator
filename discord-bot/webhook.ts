@@ -1,5 +1,7 @@
 import { verifySignature } from "https://deno.land/x/discordeno@18.0.0/mod.ts";
-import { BotSettings, UserSettings } from "./types.ts";
+import { BotSettings, UserSettings, NotificationCondition } from "./types.ts";
+import { fetchScheduleData, getAllMatches, getMatchesForNotification } from "./schedule.ts";
+import { checkNotificationConditions, sendNotification, createNotificationMessage, shouldNotify } from "./notifications.ts";
 
 // 環境変数の取得
 const DISCORD_TOKEN = Deno.env.get("DISCORD_TOKEN");
@@ -11,7 +13,7 @@ if (!DISCORD_TOKEN || !DISCORD_APPLICATION_ID || !DISCORD_PUBLIC_KEY) {
   console.error("  DISCORD_TOKEN:", !!DISCORD_TOKEN ? "✅" : "❌");
   console.error("  DISCORD_APPLICATION_ID:", !!DISCORD_APPLICATION_ID ? "✅" : "❌");
   console.error("  DISCORD_PUBLIC_KEY:", !!DISCORD_PUBLIC_KEY ? "✅" : "❌");
-  Deno.exit(1);
+  throw new Error("必要な環境変数が設定されていません");
 }
 
 // ユーザー設定を保存するMap（メモリ内）
