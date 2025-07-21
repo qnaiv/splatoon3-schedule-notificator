@@ -86,7 +86,7 @@ const bot = createBot({
 
             try {
               // Base64デコードしてJSON解析
-              const decoded = atob(settingsParam);
+              const decoded = decodeURIComponent(escape(atob(settingsParam)));
               const settings: BotSettings = JSON.parse(decoded);
               
               // ユーザー設定を保存
