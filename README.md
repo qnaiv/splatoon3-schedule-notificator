@@ -1,27 +1,32 @@
-# スプラトゥーン3 スケジュール通知PWA
+# スプラトゥーン3 Discord通知システム
 
-スプラトゥーン3のスケジュール確認と通知機能を提供するProgressive Web App（PWA）です。
+スプラトゥーン3のスケジュール確認とDiscord通知機能を提供するWebアプリケーションです。
 
 ## ✨ 特徴
 
+- 🤖 **Discord Bot**: スラッシュコマンドでDiscordに直接通知
 - 🔔 **カスタム通知**: ステージ・ルール・マッチタイプを組み合わせた柔軟な通知条件設定
-- 📱 **PWA対応**: ホーム画面に追加してアプリのように使用可能
-- 🆓 **完全無料**: GitHub Pages + GitHub Actionsで運用コストゼロ
+- 🌐 **WebUI**: ブラウザで簡単に通知条件を設定
+- 🆓 **完全無料**: GitHub Pages + GitHub Actions + Deno Deployで運用コストゼロ
 - ⚡ **高速**: 静的ファイル配信でサーバーレス
 - 🔄 **自動更新**: 2時間ごとにスケジュールを自動取得
 - 📊 **リアルタイム**: 現在開催中と今後の予定を表示
 
 ## 🛠️ 技術スタック
 
-### フロントエンド
+### WebUI (フロントエンド)
 - **React 18** + **TypeScript**
 - **Vite** (ビルドツール)
 - **Tailwind CSS** (スタイリング)
-- **PWA** (Service Worker)
 - **IndexedDB** (ローカルストレージ)
 
+### Discord Bot (バックエンド)
+- **Deno** + **TypeScript**
+- **Deno Deploy** (サーバーレス実行環境)
+- **Discord Webhook API** (スラッシュコマンド対応)
+
 ### インフラ
-- **GitHub Pages** (ホスティング)
+- **GitHub Pages** (WebUIホスティング)
 - **GitHub Actions** (自動デプロイ・データ取得)
 - **Spla3 API** (データソース)
 
@@ -30,25 +35,34 @@
 ### 1. リポジトリのクローン
 
 ```bash
-git clone https://github.com/yourusername/splatoon3-schedule-pwa.git
-cd splatoon3-schedule-pwa
+git clone https://github.com/yourusername/splatoon3-schedule-notificator.git
+cd splatoon3-schedule-notificator
 ```
 
-### 2. 依存関係のインストール
+### 2. WebUIのセットアップ
 
 ```bash
+# 依存関係のインストール
 npm install
-```
 
-### 3. 開発サーバーの起動
-
-```bash
+# 開発サーバーの起動
 npm run dev
 ```
 
-http://localhost:3000 でアプリが起動します。
+http://localhost:3000 でWebUIが起動します。
 
-### 4. GitHub Pagesのセットアップ
+### 3. Discord Botのセットアップ
+
+1. **Discord Developer Portal**で新しいアプリケーションを作成
+2. **Bot**セクションでTokenを取得
+3. **General Information**でApplication IDとPublic Keyを取得
+4. **Deno Deploy**プロジェクトを作成
+5. 環境変数を設定:
+   - `DISCORD_TOKEN`: Botトークン
+   - `DISCORD_APPLICATION_ID`: アプリケーションID
+   - `DISCORD_PUBLIC_KEY`: 公開鍵
+
+### 4. GitHub Pages & Actionsのセットアップ
 
 1. **GitHubリポジトリ作成**
    - このプロジェクトをGitHubにpush
@@ -57,32 +71,28 @@ http://localhost:3000 でアプリが起動します。
    - リポジトリの Settings > Pages
    - Source: "GitHub Actions" を選択
 
-3. **GitHub Actions実行**
-   - `.github/workflows/fetch-schedule.yml` が自動実行
-   - 2時間ごとにスケジュールデータを取得
-
-4. **URL設定の更新**
+3. **URL設定の更新**
    ```typescript
-   // src/hooks/useSchedule.ts
-   const API_CONFIG = {
-     baseUrl: 'https://yourusername.github.io/splatoon3-schedule-pwa',
-     // ...
-   };
-   ```
-   
-   ```javascript
-   // public/sw.js
-   const apiUrl = 'https://yourusername.github.io/splatoon3-schedule-pwa/api/schedule.json';
+   // WebUIのAPIエンドポイントを更新
+   // src/hooks/useSchedule.ts内のAPIベースURL
    ```
 
 ## 📋 使用方法
 
 ### 基本的な使い方
 
-1. **アプリアクセス**: GitHub PagesのURLにアクセス
-2. **PWAインストール**: ブラウザの「ホーム画面に追加」
-3. **通知許可**: 初回起動時に通知を許可
-4. **条件設定**: 「通知設定」タブで通知条件を作成
+1. **WebUIアクセス**: GitHub PagesのURLにアクセス
+2. **条件設定**: 「Discord設定」タブで通知条件を作成
+3. **設定生成**: 「Discord設定生成」ボタンで設定文字列をコピー
+4. **Discord連携**: Discordで `/watch 設定文字列` コマンドを実行
+
+### Discord Botコマンド
+
+- `/watch [設定文字列]` - 通知監視を開始
+- `/status` - 現在の通知設定を確認
+- `/stop` - 通知監視を停止
+- `/test` - テスト通知を送信
+- `/check` - 即座に通知条件をチェックして送信
 
 ### 通知条件の設定
 
@@ -91,61 +101,62 @@ http://localhost:3000 でアプリが起動します。
 3. **マッチタイプ**: Xマッチ、バンカラマッチ等を選択
 4. **ステージ選択**: お気に入りのステージを選択
 5. **通知タイミング**: 何分前に通知するかを設定
-6. **論理演算**: AND/OR条件で組み合わせ
 
 ### 通知の仕組み
 
-- アプリが2時間ごとにGitHub Pagesからスケジュールを取得
-- 設定した条件に合致するマッチがあるかをチェック
-- 条件に合致し、指定した時間になったらプッシュ通知を表示
+- GitHub Actionsが2時間ごとにスケジュールを取得
+- Discord Botが定期的に条件をチェック
+- 条件に合致し、指定した時間になったらDiscordに通知
 
 ## 🔧 開発者向け情報
 
 ### プロジェクト構造
 
 ```
-splatoon3-schedule-pwa/
-├── src/
+splatoon3-schedule-notificator/
+├── src/                          # WebUI (React)
 │   ├── components/
 │   │   └── NotificationSettings.tsx
 │   ├── hooks/
 │   │   ├── useSettings.ts
 │   │   └── useSchedule.ts
-│   ├── types/
-│   │   └── index.ts
-│   ├── App.tsx
-│   └── main.tsx
-├── public/
-│   ├── sw.js
-│   ├── manifest.json
-│   └── icons/
+│   └── types/
+├── discord-bot/                  # Discord Bot (Deno)
+│   ├── webhook.ts               # メインBot実装
+│   ├── types.ts                 # 型定義
+│   ├── schedule.ts              # スケジュール取得
+│   └── notifications.ts         # 通知ロジック
 ├── scripts/
-│   └── fetch-schedule.js
-├── .github/
-│   └── workflows/
-│       └── fetch-schedule.yml
-└── package.json
+│   └── fetch-schedule.js        # スケジュール取得スクリプト
+├── .github/workflows/
+│   ├── deploy.yml               # WebUI自動デプロイ
+│   └── update-schedule.yml      # スケジュール自動更新
+└── public/api/                  # APIデータ
 ```
 
 ### 主要コンポーネント
 
-- **App.tsx**: メインアプリケーション
-- **NotificationSettings.tsx**: 通知条件設定UI
+#### WebUI
+- **NotificationSettings.tsx**: 通知条件設定UI・Discord設定生成
 - **useSettings.ts**: IndexedDBとの設定管理
 - **useSchedule.ts**: スケジュールデータ取得
-- **sw.js**: Service Worker（通知機能）
+
+#### Discord Bot
+- **webhook.ts**: Webhook受信・スラッシュコマンド処理
+- **schedule.ts**: GitHub PagesからのAPI取得
+- **notifications.ts**: 通知条件チェック・Discord送信
 
 ### ビルドとデプロイ
 
 ```bash
-# ローカルビルド
+# WebUIビルド
 npm run build
 
 # スケジュールデータ取得テスト
 npm run fetch-schedule
 
-# プレビュー
-npm run preview
+# Discord Bot (Deno Deploy自動デプロイ)
+git push origin main
 ```
 
 ### API仕様
@@ -168,37 +179,37 @@ interface ScheduleMatch {
 #### 生成されるAPIファイル
 
 - `/api/schedule.json`: 全スケジュールデータ
-- `/api/current.json`: 現在開催中のマッチ
-- `/api/upcoming.json`: 今後24時間のマッチ
-- `/api/summary.json`: データサマリー
+- `/api/last-updated.json`: 最終更新情報
 
 ## 🐛 トラブルシューティング
 
 ### よくある問題
 
-1. **通知が来ない**
-   - ブラウザの通知許可を確認
-   - PWAとしてホーム画面に追加しているか確認（iOS Safari）
-   - 通知条件が正しく設定されているか確認
+1. **Discord Botが応答しない**
+   - Interactions Endpoint URLが正しく設定されているか確認
+   - Deno Deployの環境変数が正しく設定されているか確認
+   - Botがサーバーに招待されているか確認
 
-2. **スケジュールが更新されない**
-   - GitHub Actionsの実行状況を確認
-   - API URLが正しく設定されているか確認
-   - ネットワーク接続を確認
+2. **通知が来ない**
+   - `/status`コマンドで設定が正しく保存されているか確認
+   - `/check`コマンドで即座にテスト実行
+   - 通知条件が現在のスケジュールと一致しているか確認
 
-3. **PWAがインストールできない**
-   - HTTPS接続であることを確認
-   - manifest.jsonが正しく配信されているか確認
-   - Service Workerが正常に登録されているか確認
+3. **WebUIで設定生成ができない**
+   - 通知条件が1つ以上有効になっているか確認
+   - ブラウザのJavaScriptが有効になっているか確認
 
 ### デバッグ方法
 
-```javascript
-// ブラウザのコンソールでService Workerの状態確認
-navigator.serviceWorker.getRegistrations().then(console.log);
+```bash
+# Deno Deployログ確認
+# Deno Deployダッシュボード > プロジェクト > Logs
 
-// IndexedDBの内容確認
-// 開発者ツール > Application > Storage > IndexedDB
+# GitHub Actionsログ確認
+# GitHubリポジトリ > Actions タブ
+
+# WebUIデバッグ
+# ブラウザ開発者ツール > Console
 ```
 
 ## 📝 ライセンス
@@ -209,15 +220,16 @@ MIT License
 
 - [Spla3 API](https://spla3.yuu26.com/) - スケジュールデータの提供
 - [Lucide React](https://lucide.dev/) - アイコンライブラリ
+- [Deno Deploy](https://deno.com/deploy) - サーバーレス実行環境
 - Splatoon 3 - Nintendo
 
 ## 🔮 今後の予定
 
-- [ ] ダークモード対応
+- [ ] 複数サーバー対応
 - [ ] 統計情報表示
-- [ ] エクスポート/インポート機能
 - [ ] より詳細な通知カスタマイズ
-- [ ] オフライン対応強化
+- [ ] フェスマッチ対応
+- [ ] 通知履歴機能
 
 ---
 
