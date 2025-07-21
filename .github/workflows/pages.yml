@@ -41,6 +41,12 @@ jobs:
       - name: Build WebUI
         run: npm run build
 
+      - name: Download existing API files
+        run: |
+          mkdir -p dist/api
+          curl -f -o dist/api/schedule.json https://qnaiv.github.io/splatoon3-schedule-notificator/api/schedule.json || echo "schedule.json not found, skipping"
+          curl -f -o dist/api/last-updated.json https://qnaiv.github.io/splatoon3-schedule-notificator/api/last-updated.json || echo "last-updated.json not found, skipping"
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
