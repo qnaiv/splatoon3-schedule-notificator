@@ -4,7 +4,7 @@ import path from 'path';
 
 // API設定
 const SPLATOON3_API_URL = 'https://spla3.yuu26.com/api/schedule';
-const OUTPUT_DIR = '../public/api';
+const OUTPUT_DIR = path.resolve(process.cwd(), 'public/api');
 const SCHEDULE_FILE = 'schedule.json';
 const LAST_UPDATED_FILE = 'last-updated.json';
 
