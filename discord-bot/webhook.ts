@@ -19,6 +19,10 @@ if (!DISCORD_TOKEN || !DISCORD_APPLICATION_ID || !DISCORD_PUBLIC_KEY) {
 // ユーザー設定を保存するMap（メモリ内）
 const userSettings = new Map<string, UserSettings>();
 
+// Deno KV（永続化ストレージ）
+let kv: Deno.Kv | null = null;
+const pendingUpdates = new Set<string>(); // 更新待ちユーザーID
+
 // Discord署名検証関数（手動実装）
 async function verifyDiscordSignature(
   body: string,
@@ -234,12 +238,15 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
           const decoded = decodeURIComponent(escape(atob(settingsParam)));
           const settings: BotSettings = JSON.parse(decoded);
           
-          // ユーザー設定を保存
+          // ユーザー設定を保存（メモリ内）
           userSettings.set(userId, {
             userId,
             channelId,
             conditions: settings.conditions.filter(c => c.enabled)
           });
+          
+          // バッチ更新対象に追加
+          pendingUpdates.add(userId);
           
           const enabledCount = settings.conditions.filter(c => c.enabled).length;
           
@@ -297,6 +304,9 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
       
       case "stop": {
         userSettings.delete(userId);
+        
+        // バッチ削除対象に追加（KVからも削除される）
+        pendingUpdates.add(userId);
         
         return new Response(JSON.stringify({
           type: 4,
@@ -659,6 +669,7 @@ async function checkNotifications() {
               });
 
               condition.lastNotified = new Date().toISOString();
+              pendingUpdates.add(userId); // lastNotified更新を永続化対象に追加
               totalNotificationsSent++;
               console.log(`✅ 定期通知送信成功: ${userId} - ${condition.name}`);
             } catch (error) {
@@ -675,8 +686,84 @@ async function checkNotifications() {
   }
 }
 
-// 10分間隔での定期チェック（無料枠考慮）
-Deno.cron("notification-check", "*/10 * * * *", checkNotifications);
+// Deno KV初期化と設定復元
+async function initializeKV() {
+  try {
+    console.log("🗄️ Deno KV初期化中...");
+    kv = await Deno.openKv();
+    console.log("✅ Deno KV接続成功");
+    
+    // 既存設定の復元
+    console.log("📥 既存設定を復元中...");
+    const iter = kv.list({ prefix: ["user_settings"] });
+    let restoredCount = 0;
+    
+    for await (const { key, value } of iter) {
+      const userId = key[1] as string;
+      userSettings.set(userId, value as UserSettings);
+      restoredCount++;
+    }
+    
+    console.log(`✅ 設定復元完了: ${restoredCount}件のユーザー設定を復元`);
+  } catch (error) {
+    console.error("❌ Deno KV初期化失敗:", error);
+    console.log("⚠️ メモリ内モードで続行します");
+    kv = null;
+  }
+}
+
+// バッチ設定更新
+async function batchUpdateSettings() {
+  if (!kv || pendingUpdates.size === 0) {
+    return;
+  }
+  
+  try {
+    console.log(`💾 設定バックアップ開始: ${pendingUpdates.size}件`);
+    let savedCount = 0;
+    
+    for (const userId of pendingUpdates) {
+      const settings = userSettings.get(userId);
+      if (settings) {
+        // 設定を保存
+        await kv.set(["user_settings", userId], settings);
+        savedCount++;
+      } else {
+        // 設定が削除された場合はKVからも削除
+        await kv.delete(["user_settings", userId]);
+        console.log(`🗑️ 設定削除: ${userId}`);
+      }
+    }
+    
+    pendingUpdates.clear();
+    console.log(`✅ 設定バックアップ完了: ${savedCount}件保存`);
+  } catch (error) {
+    console.error("❌ 設定バックアップエラー:", error);
+  }
+}
+
+// 緊急保存（プロセス終了時）
+async function emergencySave() {
+  if (pendingUpdates.size > 0) {
+    console.log(`🚨 緊急保存実行: ${pendingUpdates.size}件`);
+    await batchUpdateSettings();
+  }
+}
+
+// 10分間隔での定期チェック + バッチ更新
+Deno.cron("notification-and-backup", "*/10 * * * *", async () => {
+  await checkNotifications();
+  await batchUpdateSettings();
+});
+
+// プロセス終了シグナル対応
+try {
+  Deno.addSignalListener("SIGTERM", emergencySave);
+  Deno.addSignalListener("SIGINT", emergencySave);
+} catch (error) {
+  // Deno Deployでは一部のシグナルが使用できない場合がある
+  console.log("⚠️ シグナルリスナー設定をスキップ");
+}
 
 // メイン処理
 async function main() {
@@ -687,6 +774,9 @@ async function main() {
   console.log("DISCORD_PUBLIC_KEY exists:", !!DISCORD_PUBLIC_KEY);
   
   try {
+    // Deno KV初期化
+    await initializeKV();
+    
     await registerCommands();
     console.log("✅ コマンド登録完了");
     
