@@ -72,7 +72,9 @@ const NotificationSettings: React.FC = () => {
       conditions: botConditions
     };
     
-    const settingsString = btoa(JSON.stringify(botSettings));
+    // UTF-8文字列を安全にBase64エンコード
+    const utf8String = JSON.stringify(botSettings);
+    const settingsString = btoa(encodeURIComponent(utf8String).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))));
     const watchCommand = `/watch settings:${settingsString}`;
     
     navigator.clipboard.writeText(watchCommand).then(() => {
