@@ -585,6 +585,99 @@ async function sendSimpleMessage(channelId: string, content: string): Promise<vo
   }
 }
 
+// 定期的な通知チェック（10分ごと）
+async function checkNotifications() {
+  console.log("🔄 定期通知チェックを開始...");
+  
+  try {
+    const scheduleData = await fetchScheduleData();
+    if (!scheduleData) {
+      console.log("❌ スケジュールデータの取得に失敗");
+      return;
+    }
+    
+    const allMatches = getAllMatches(scheduleData);
+    let totalNotificationsSent = 0;
+    
+    for (const [userId, settings] of userSettings.entries()) {
+      for (const condition of settings.conditions) {
+        if (!condition.enabled) continue;
+        
+        const targetMatches = getMatchesForNotification(allMatches, condition.notifyMinutesBefore);
+        const matchingMatches = checkNotificationConditions(targetMatches, condition);
+        
+        for (const match of matchingMatches) {
+          if (shouldNotify(match, condition.notifyMinutesBefore, settings.lastNotified)) {
+            const notification = createNotificationMessage(condition, match);
+            
+            // Discord通知送信
+            try {
+              const embed = {
+                title: "🦑 スプラトゥーン3 通知",
+                description: `**${condition.name}** の条件に合致しました！`,
+                fields: [
+                  {
+                    name: "ルール",
+                    value: match.rule.name,
+                    inline: true
+                  },
+                  {
+                    name: "マッチタイプ", 
+                    value: match.match_type,
+                    inline: true
+                  },
+                  {
+                    name: "ステージ",
+                    value: match.stages.map(s => s.name).join(" / "),
+                    inline: false
+                  },
+                  {
+                    name: "開始時刻",
+                    value: new Date(match.start_time).toLocaleString("ja-JP", {
+                      timeZone: "Asia/Tokyo",
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit", 
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false
+                    }),
+                    inline: false
+                  }
+                ],
+                color: 0x00ff88,
+                timestamp: new Date().toISOString()
+              };
+
+              await fetch(`https://discord.com/api/v10/channels/${settings.channelId}/messages`, {
+                method: "POST",
+                headers: {
+                  "Authorization": `Bot ${DISCORD_TOKEN}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ embeds: [embed] })
+              });
+
+              settings.lastNotified = new Date().toISOString();
+              totalNotificationsSent++;
+              console.log(`✅ 定期通知送信成功: ${userId} - ${condition.name}`);
+            } catch (error) {
+              console.error(`❌ 定期通知送信失敗: ${userId}`, error);
+            }
+          }
+        }
+      }
+    }
+    
+    console.log(`✅ 定期通知チェック完了: ${totalNotificationsSent}件送信`);
+  } catch (error) {
+    console.error("❌ 定期通知チェックエラー:", error);
+  }
+}
+
+// 10分間隔での定期チェック（無料枠考慮）
+Deno.cron("notification-check", "*/10 * * * *", checkNotifications);
+
 // メイン処理
 async function main() {
   console.log("🚀 Discord Webhook Bot を起動中...");

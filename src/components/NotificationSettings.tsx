@@ -126,6 +126,14 @@ const NotificationSettings: React.FC = () => {
             <li>「Discord設定生成」ボタンで設定文字列を生成</li>
             <li>Discordで「/watch 設定文字列」コマンドを実行</li>
           </ol>
+          
+          <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-xs text-yellow-800">
+              <strong>⚠️ 通知タイミングについて：</strong><br/>
+              Discord Botは10分間隔で自動チェックを行うため、設定した時刻から±10分程度の誤差が発生する場合があります。<br/>
+              即座に確認したい場合は、Discordで <code className="bg-yellow-100 px-1 rounded">/check</code> コマンドをお使いください。
+            </p>
+          </div>
         </div>
       </div>
 
@@ -301,7 +309,7 @@ const NotificationConditionEditor: React.FC<NotificationConditionEditorProps> = 
     stages: condition?.stages || { operator: 'OR' as const, values: [] },
     rules: condition?.rules || { operator: 'OR' as const, values: [] },
     matchTypes: condition?.matchTypes || { operator: 'OR' as const, values: [] },
-    notifyMinutesBefore: condition?.notifyMinutesBefore || 15
+    notifyMinutesBefore: condition?.notifyMinutesBefore || 10
   }));
 
   const handleSave = () => {
@@ -353,19 +361,24 @@ const NotificationConditionEditor: React.FC<NotificationConditionEditorProps> = 
             <div>
               <label className="block text-sm font-medium mb-2">通知タイミング</label>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="1"
-                  max="120"
+                <select
                   value={formData.notifyMinutesBefore}
                   onChange={(e) => setFormData({ 
                     ...formData, 
-                    notifyMinutesBefore: parseInt(e.target.value) || 15 
+                    notifyMinutesBefore: parseInt(e.target.value) 
                   })}
-                  className="w-20 border rounded px-3 py-2"
-                />
-                <span className="text-sm">分前に通知</span>
+                  className="border rounded px-3 py-2"
+                >
+                  <option value={10}>10分前</option>
+                  <option value={20}>20分前</option>
+                  <option value={30}>30分前</option>
+                  <option value={60}>60分前</option>
+                </select>
+                <span className="text-sm text-gray-600">に通知</span>
               </div>
+              <p className="text-xs text-gray-500 mt-2 bg-yellow-50 border border-yellow-200 rounded-md p-2">
+                ⚠️ <strong>通知について：</strong>Discord Botは10分間隔で条件をチェックするため、設定時刻から±10分程度の誤差が発生する場合があります。無料枠での運用のためご了承ください。
+              </p>
             </div>
 
             {/* ルール選択 */}

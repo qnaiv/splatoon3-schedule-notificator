@@ -91,9 +91,9 @@ export function shouldNotify(
   const startTime = new Date(match.start_time);
   const notifyTime = new Date(startTime.getTime() - notifyMinutesBefore * 60 * 1000);
   
-  // 通知時刻から±5分以内かチェック
+  // 通知時刻から±10分以内かチェック（10分間隔チェックに対応）
   const timeDiff = Math.abs(now.getTime() - notifyTime.getTime());
-  const isTimeToNotify = timeDiff <= 5 * 60 * 1000; // 5分の誤差許容
+  const isTimeToNotify = timeDiff <= 10 * 60 * 1000; // 10分の誤差許容
   
   if (!isTimeToNotify) {
     return false;
