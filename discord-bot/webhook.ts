@@ -171,6 +171,46 @@ async function handleRequest(request: Request): Promise<Response> {
     }
   }
 
+  // バックアップAPI（GitHub Actions用）
+  const url = new URL(request.url);
+  if (request.method === "POST" && url.pathname === "/api/backup") {
+    console.log("🔧 Debug: バックアップAPI呼び出し");
+    
+    // 認証チェック
+    const authHeader = request.headers.get("authorization");
+    const backupSecret = Deno.env.get("BACKUP_SECRET");
+    
+    if (!authHeader || !backupSecret) {
+      console.log("❌ バックアップAPI: 認証情報なし");
+      return new Response(JSON.stringify({ error: "Authentication required" }), { 
+        status: 401,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    
+    const token = authHeader.replace("Bearer ", "");
+    if (token !== backupSecret) {
+      console.log("❌ バックアップAPI: 認証失敗");
+      return new Response(JSON.stringify({ error: "Invalid authentication token" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    
+    // バックアップ実行
+    const result = await immediateBackup();
+    
+    return new Response(JSON.stringify({
+      success: result.success,
+      message: result.message,
+      userCount: result.count,
+      timestamp: new Date().toISOString()
+    }), {
+      status: result.success ? 200 : 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
   // GET リクエスト（接続テスト用）
   if (request.method === "GET") {
     console.log("🔧 Debug: GET リクエスト受信 - 接続テスト");
@@ -747,6 +787,36 @@ async function emergencySave() {
   if (pendingUpdates.size > 0) {
     console.log(`🚨 緊急保存実行: ${pendingUpdates.size}件`);
     await batchUpdateSettings();
+  }
+}
+
+// 即座バックアップ（API呼び出し用）
+async function immediateBackup(): Promise<{ success: boolean; message: string; count: number }> {
+  try {
+    if (!kv) {
+      return { success: false, message: "KV not available", count: 0 };
+    }
+    
+    console.log("🚀 即座バックアップ開始");
+    
+    // 全ての現在のユーザー設定をKVに保存
+    let savedCount = 0;
+    for (const [userId, settings] of userSettings.entries()) {
+      await kv.set(["user_settings", userId], settings);
+      savedCount++;
+    }
+    
+    // 保留中の更新もクリア
+    pendingUpdates.clear();
+    
+    const message = `即座バックアップ完了: ${savedCount}件保存`;
+    console.log(`✅ ${message}`);
+    
+    return { success: true, message, count: savedCount };
+  } catch (error) {
+    const errorMessage = `即座バックアップ失敗: ${error.message}`;
+    console.error(`❌ ${errorMessage}`);
+    return { success: false, message: errorMessage, count: 0 };
   }
 }
 

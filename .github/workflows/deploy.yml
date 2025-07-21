@@ -22,6 +22,17 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Backup user settings before deploy
+        run: |
+          echo "🚀 Triggering backup before deployment..."
+          curl -X POST "https://qnaiv-splatoon3-s-12.deno.dev/api/backup" \
+            -H "Authorization: Bearer ${{ secrets.BACKUP_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --max-time 30 \
+            --fail \
+            --silent \
+            --show-error || echo "⚠️ Backup failed or bot not running - continuing with deployment"
+
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
         with:
