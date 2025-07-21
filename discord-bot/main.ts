@@ -133,17 +133,35 @@ const bot = createBot({
               return;
             }
             
-            const conditionsList = settings.conditions
-              .map(c => `• ${c.name} (${c.notifyMinutesBefore}分前)`)
-              .join("\\n");
-              
+            if (settings.conditions.length === 0) {
+              await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
+                type: 4,
+                data: {
+                  content: "❌ 有効な通知設定がありません。",
+                  flags: 64
+                }
+              });
+              return;
+            }
+
+            // 最初のレスポンス（必須）
             await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
               type: 4,
               data: {
-                content: `📊 **現在の通知設定**\\n\\n${conditionsList}\\n\\n📍 通知先: <#${channelId}>`,
+                content: `📋 通知設定詳細を送信中... (${settings.conditions.length}件)`,
                 flags: 64
               }
             });
+
+            // 各条件を個別のメッセージとして送信
+            for (let i = 0; i < settings.conditions.length; i++) {
+              const condition = settings.conditions[i];
+              const content = formatSingleConditionWithNumber(condition, channelId, i + 1, settings.conditions.length);
+              
+              await bot.helpers.sendMessage(channelId, {
+                content
+              });
+            }
             break;
           }
           
@@ -438,6 +456,58 @@ async function main() {
     console.error("❌ Bot起動エラー:", error);
     throw error;
   }
+}
+
+// 単一条件の詳細情報をフォーマットする関数
+function formatSingleCondition(condition: NotificationCondition, channelId: string): string {
+  const formatArray = (items: string[], emptyText: string = "制限なし"): string => {
+    if (items.length === 0) return emptyText;
+    
+    // 長い配列は改行で整理
+    if (items.join(", ").length > 50) {
+      return "\n      " + items.join(", ");
+    }
+    return items.join(", ");
+  };
+
+  const rulesText = formatArray(condition.rules);
+  const matchTypesText = formatArray(condition.matchTypes);
+  const stagesText = formatArray(condition.stages);
+
+  return `📊 **通知設定**
+
+🔔 **${condition.name}** (${condition.notifyMinutesBefore}分前)
+   ├ ルール: ${rulesText}
+   ├ マッチ: ${matchTypesText}
+   └ ステージ: ${stagesText}
+
+📍 通知先: <#${channelId}>`;
+}
+
+// 番号付き単一条件の詳細情報をフォーマットする関数
+function formatSingleConditionWithNumber(condition: NotificationCondition, channelId: string, current: number, total: number): string {
+  const formatArray = (items: string[], emptyText: string = "制限なし"): string => {
+    if (items.length === 0) return emptyText;
+    
+    // 長い配列は改行で整理
+    if (items.join(", ").length > 50) {
+      return "\n      " + items.join(", ");
+    }
+    return items.join(", ");
+  };
+
+  const rulesText = formatArray(condition.rules);
+  const matchTypesText = formatArray(condition.matchTypes);
+  const stagesText = formatArray(condition.stages);
+
+  return `📊 **通知設定 ${current}/${total}**
+
+🔔 **${condition.name}** (${condition.notifyMinutesBefore}分前)
+   ├ ルール: ${rulesText}
+   ├ マッチ: ${matchTypesText}
+   └ ステージ: ${stagesText}
+
+📍 通知先: <#${channelId}>`;
 }
 
 if (import.meta.main) {
