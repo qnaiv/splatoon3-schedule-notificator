@@ -115,13 +115,6 @@ export const useSettings = () => {
       await saveSettingsToDB(updatedSettings);
       setSettings(updatedSettings);
       
-      // Service Workerに設定更新を通知
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'SETTINGS_UPDATED',
-          data: updatedSettings
-        });
-      }
       
       console.log('Settings saved successfully');
     } catch (err) {
@@ -190,64 +183,6 @@ export const useSettings = () => {
     await updateNotificationCondition(conditionId, { enabled });
   }, [updateNotificationCondition]);
 
-  // 通知許可要求
-  const requestNotificationPermission = useCallback(async (): Promise<boolean> => {
-    if (!('Notification' in window)) {
-      setError('This browser does not support notifications');
-      return false;
-    }
-    
-    try {
-      const permission = await Notification.requestPermission();
-      return permission === 'granted';
-    } catch (err) {
-      console.error('Failed to request notification permission:', err);
-      setError('Failed to request notification permission');
-      return false;
-    }
-  }, []);
-
-  // Service Worker登録と通知開始
-  const enableNotifications = useCallback(async (): Promise<boolean> => {
-    try {
-      // 通知許可確認
-      const hasPermission = await requestNotificationPermission();
-      if (!hasPermission) {
-        return false;
-      }
-      
-      // Service Worker登録確認
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        console.log('Service Worker is ready:', registration);
-        
-        // 通知開始指示
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({
-            type: 'START_NOTIFICATIONS'
-          });
-        }
-        
-        return true;
-      } else {
-        setError('Service Worker is not supported');
-        return false;
-      }
-    } catch (err) {
-      console.error('Failed to enable notifications:', err);
-      setError('Failed to enable notifications');
-      return false;
-    }
-  }, [requestNotificationPermission]);
-
-  // 手動チェック実行
-  const checkNow = useCallback(() => {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        type: 'CHECK_NOW'
-      });
-    }
-  }, []);
 
   // 初期読み込み
   useEffect(() => {
@@ -263,9 +198,6 @@ export const useSettings = () => {
     updateNotificationCondition,
     deleteNotificationCondition,
     toggleNotificationCondition,
-    requestNotificationPermission,
-    enableNotifications,
-    checkNow,
     reloadSettings: loadSettings
   };
 };

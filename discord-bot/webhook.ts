@@ -491,7 +491,15 @@ async function manualNotificationCheck(userId: string, channelId: string) {
 async function sendMatchNotification(userSettings: UserSettings, condition: any, match: any): Promise<boolean> {
   try {
     const stages = match.stages.map((stage: any) => stage.name).join(", ");
-    const startTime = new Date(match.start_time).toLocaleString("ja-JP");
+    const startTime = new Date(match.start_time).toLocaleString("ja-JP", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit", 
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    });
     
     const embed = {
       title: "🦑 スプラトゥーン3 通知",

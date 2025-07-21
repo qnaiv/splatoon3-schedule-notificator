@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Calendar, Settings, RefreshCw, Users } from 'lucide-react';
 import NotificationSettings from './components/NotificationSettings';
 import { useSchedule } from './hooks/useSchedule';
@@ -15,29 +15,8 @@ const App: React.FC = () => {
     refreshData,
     lastUpdated 
   } = useSchedule();
-  const { settings, enableNotifications } = useSettings();
+  const { settings } = useSettings();
 
-  // Service Worker登録
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered successfully:', registration);
-        })
-        .catch((error) => {
-          console.error('Service Worker registration failed:', error);
-        });
-    }
-  }, []);
-
-  // 自動通知有効化（初回のみ）
-  useEffect(() => {
-    if (settings && settings.globalSettings.enableNotifications) {
-      enableNotifications().catch((err) => {
-        console.error('Failed to enable notifications:', err);
-      });
-    }
-  }, [settings, enableNotifications]);
 
 
   const formatTime = (dateString: string) => {
@@ -71,7 +50,7 @@ const App: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-800">スプラトゥーン3</h1>
-                <p className="text-sm text-gray-600">スケジュール通知</p>
+                <p className="text-sm text-gray-600">Discord通知</p>
               </div>
             </div>
             
@@ -122,7 +101,7 @@ const App: React.FC = () => {
               }`}
             >
               <Settings className="w-5 h-5" />
-              通知設定
+              Discord設定
               {settings?.notificationConditions && settings.notificationConditions.length > 0 && (
                 <span className="bg-gradient-to-r from-blue-400 to-purple-500 text-white text-xs px-2.5 py-1 rounded-full shadow-md">
                   {settings.notificationConditions.filter(c => c.enabled).length}

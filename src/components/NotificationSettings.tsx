@@ -12,16 +12,13 @@ const NotificationSettings: React.FC = () => {
     addNotificationCondition, 
     updateNotificationCondition, 
     deleteNotificationCondition, 
-    toggleNotificationCondition,
-    enableNotifications,
-    checkNow
+    toggleNotificationCondition
   } = useSettings();
   
   const { allStages } = useSchedule();
   
   const [showEditor, setShowEditor] = useState(false);
   const [editingCondition, setEditingCondition] = useState<NotificationCondition | null>(null);
-  const [testingNotifications, setTestingNotifications] = useState(false);
 
   if (loading) {
     return (
@@ -49,21 +46,28 @@ const NotificationSettings: React.FC = () => {
     setShowEditor(true);
   };
 
-  const handleTestNotifications = async () => {
-    setTestingNotifications(true);
-    try {
-      const enabled = await enableNotifications();
-      if (enabled) {
-        checkNow();
-        alert('通知のテストを実行しました。設定した条件に合致するマッチがあれば通知が表示されます。');
-      } else {
-        alert('通知の許可が必要です。ブラウザの設定を確認してください。');
-      }
-    } catch (err) {
-      alert('通知のテストに失敗しました。');
-    } finally {
-      setTestingNotifications(false);
+  const handleGenerateDiscordSettings = () => {
+    if (!settings?.notificationConditions || settings.notificationConditions.length === 0) {
+      alert('まず通知条件を設定してください。');
+      return;
     }
+    
+    const enabledConditions = settings.notificationConditions.filter(c => c.enabled);
+    if (enabledConditions.length === 0) {
+      alert('有効な通知条件がありません。');
+      return;
+    }
+    
+    const botSettings = {
+      conditions: enabledConditions
+    };
+    
+    const settingsString = btoa(JSON.stringify(botSettings));
+    navigator.clipboard.writeText(settingsString).then(() => {
+      alert('Discord Bot用の設定文字列をクリップボードにコピーしました！\nDiscordで「/watch」コマンドと一緒に使用してください。');
+    }).catch(() => {
+      prompt('Discord Bot用の設定文字列（コピーしてDiscordで使用してください）:', settingsString);
+    });
   };
 
   return (
@@ -77,12 +81,11 @@ const NotificationSettings: React.FC = () => {
         
         <div className="flex items-center gap-3">
           <button
-            onClick={handleTestNotifications}
-            disabled={testingNotifications}
-            className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+            onClick={handleGenerateDiscordSettings}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
           >
             <Bell className="w-4 h-4" />
-            {testingNotifications ? 'テスト中...' : '通知テスト'}
+            Discord設定生成
           </button>
           
           <button
@@ -95,16 +98,23 @@ const NotificationSettings: React.FC = () => {
         </div>
       </div>
 
-      {/* 通知の状態表示 */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      {/* Discord通知の説明 */}
+      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
         <div className="flex items-center gap-2 mb-2">
-          <Bell className="w-5 h-5 text-blue-600" />
-          <h3 className="font-medium text-blue-800">通知について</h3>
+          <Bell className="w-5 h-5 text-indigo-600" />
+          <h3 className="font-medium text-indigo-800">Discord通知について</h3>
         </div>
-        <p className="text-blue-700 text-sm">
-          このアプリは2時間ごとに自動でスケジュールをチェックし、設定した条件に合致するマッチがある場合に通知を送信します。
-          通知を受け取るには、ブラウザの通知許可が必要です。
+        <p className="text-indigo-700 text-sm mb-2">
+          このアプリで設定した条件をDiscord Botで使用できます。
         </p>
+        <div className="text-indigo-700 text-sm space-y-1">
+          <p><strong>使用方法:</strong></p>
+          <ol className="list-decimal list-inside ml-4 space-y-1">
+            <li>通知条件を設定して有効にする</li>
+            <li>「Discord設定生成」ボタンで設定文字列を生成</li>
+            <li>Discordで「/watch 設定文字列」コマンドを実行</li>
+          </ol>
+        </div>
       </div>
 
       {/* 既存の通知条件一覧 */}
