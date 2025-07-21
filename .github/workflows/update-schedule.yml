@@ -39,9 +39,8 @@ jobs:
           npm install
           
       - name: Fetch and transform schedule data
-        run: |
-          cd scripts
-          node fetch-schedule.js
+        run: node scripts/fetch-schedule.js
+        working-directory: .
         env:
           FORCE_UPDATE: ${{ github.event.inputs.force_update || 'false' }}
           

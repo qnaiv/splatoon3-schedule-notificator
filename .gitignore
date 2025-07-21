@@ -142,3 +142,5 @@ vite.config.ts.timestamp-*
 # Project planning documents
 REQUIREMENTS.md
 DISCORD_BOT_PLAN.md
+
+public/
