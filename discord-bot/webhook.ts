@@ -438,14 +438,23 @@ async function manualNotificationCheck(userId: string, channelId: string) {
       });
       
       // ルール・ステージ・マッチタイプの条件のみチェック
+      console.log(`🔍 条件チェック開始: "${condition.name}"`);
+      console.log(`  - ルール条件: [${condition.rules.join(', ')}]`);
+      console.log(`  - マッチタイプ条件: [${condition.matchTypes.join(', ')}]`);
+      console.log(`  - ステージ条件: [${condition.stages.join(', ')}]`);
+      
       const matchingMatches = currentMatches.filter(match => {
+        console.log(`📝 マッチチェック: ${match.rule.name} / ${match.match_type}`);
+        
         // ルール条件チェック
         if (condition.rules.length > 0 && !condition.rules.includes(match.rule.name)) {
+          console.log(`  ❌ ルール不一致: ${match.rule.name} not in [${condition.rules.join(', ')}]`);
           return false;
         }
         
         // マッチタイプ条件チェック
         if (condition.matchTypes.length > 0 && !condition.matchTypes.includes(match.match_type)) {
+          console.log(`  ❌ マッチタイプ不一致: ${match.match_type} not in [${condition.matchTypes.join(', ')}]`);
           return false;
         }
         
@@ -456,10 +465,12 @@ async function manualNotificationCheck(userId: string, channelId: string) {
             matchStageIds.includes(stageId)
           );
           if (!hasMatchingStage) {
+            console.log(`  ❌ ステージ不一致: [${matchStageIds.join(', ')}] not in [${condition.stages.join(', ')}]`);
             return false;
           }
         }
         
+        console.log(`  ✅ 条件一致!`);
         return true;
       });
       
