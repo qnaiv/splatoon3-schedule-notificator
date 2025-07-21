@@ -607,7 +607,7 @@ async function checkNotifications() {
         const matchingMatches = checkNotificationConditions(targetMatches, condition);
         
         for (const match of matchingMatches) {
-          if (shouldNotify(match, condition.notifyMinutesBefore, settings.lastNotified)) {
+          if (shouldNotify(match, condition)) {
             const notification = createNotificationMessage(condition, match);
             
             // Discord通知送信
@@ -658,7 +658,7 @@ async function checkNotifications() {
                 body: JSON.stringify({ embeds: [embed] })
               });
 
-              settings.lastNotified = new Date().toISOString();
+              condition.lastNotified = new Date().toISOString();
               totalNotificationsSent++;
               console.log(`✅ 定期通知送信成功: ${userId} - ${condition.name}`);
             } catch (error) {

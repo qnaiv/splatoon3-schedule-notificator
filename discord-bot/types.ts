@@ -11,17 +11,16 @@ export interface NotificationCondition {
   stages: string[];
   notifyMinutesBefore: number;
   enabled: boolean;
+  lastNotified?: string;  // この条件で最後に通知した時刻
 }
 
 export interface UserSettings {
   userId: string;
   channelId: string;
   conditions: NotificationCondition[];
-  lastNotified?: string;
 }
 
 export interface ScheduleMatch {
-  id: string;
   start_time: string;
   end_time: string;
   rule: {

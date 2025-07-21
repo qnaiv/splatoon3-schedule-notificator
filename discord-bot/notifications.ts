@@ -84,12 +84,11 @@ export function createNotificationMessage(
 
 export function shouldNotify(
   match: ScheduleMatch,
-  notifyMinutesBefore: number,
-  lastNotified?: string
+  condition: NotificationCondition
 ): boolean {
   const now = new Date();
   const startTime = new Date(match.start_time);
-  const notifyTime = new Date(startTime.getTime() - notifyMinutesBefore * 60 * 1000);
+  const notifyTime = new Date(startTime.getTime() - condition.notifyMinutesBefore * 60 * 1000);
   
   // 通知時刻から±10分以内かチェック（10分間隔チェックに対応）
   const timeDiff = Math.abs(now.getTime() - notifyTime.getTime());
@@ -99,14 +98,17 @@ export function shouldNotify(
     return false;
   }
   
-  // 同じマッチについて既に通知済みかチェック
-  if (lastNotified) {
-    const lastNotifiedTime = new Date(lastNotified);
+  // この条件で既に通知済みかチェック
+  if (condition.lastNotified) {
+    const lastNotifiedTime = new Date(condition.lastNotified);
     const timeSinceLastNotification = now.getTime() - lastNotifiedTime.getTime();
-    const oneHour = 60 * 60 * 1000;
     
-    // 1時間以内に通知している場合は重複通知を避ける
-    if (timeSinceLastNotification < oneHour) {
+    // 通知設定の時間間隔より短い間隔での重複通知を防ぐ
+    // 例: 24時間前通知なら、24時間以内の重複を防ぐ
+    const notificationInterval = condition.notifyMinutesBefore * 60 * 1000;
+    const minInterval = Math.max(notificationInterval, 60 * 60 * 1000); // 最低1時間
+    
+    if (timeSinceLastNotification < minInterval) {
       return false;
     }
   }
