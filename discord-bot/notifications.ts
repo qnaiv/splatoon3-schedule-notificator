@@ -8,17 +8,17 @@ export function checkNotificationConditions(
 ): ScheduleMatch[] {
   return matches.filter(match => {
     // ルール条件チェック
-    if (condition.rules.length > 0 && !condition.rules.includes(match.rule.name)) {
+    if (condition.rules && condition.rules.length > 0 && !condition.rules.includes(match.rule.name)) {
       return false;
     }
     
     // マッチタイプ条件チェック
-    if (condition.matchTypes.length > 0 && !condition.matchTypes.includes(match.match_type)) {
+    if (condition.matchTypes && condition.matchTypes.length > 0 && !condition.matchTypes.includes(match.match_type)) {
       return false;
     }
     
     // ステージ条件チェック
-    if (condition.stages.length > 0) {
+    if (condition.stages && condition.stages.length > 0) {
       const matchStageIds = match.stages.map(stage => stage.id);
       const hasMatchingStage = condition.stages.some(stageId => 
         matchStageIds.includes(stageId)

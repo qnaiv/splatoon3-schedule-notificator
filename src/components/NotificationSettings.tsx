@@ -58,8 +58,18 @@ const NotificationSettings: React.FC = () => {
       return;
     }
     
+    // WebUI形式からDiscord Bot形式に変換
+    const botConditions = enabledConditions.map(condition => ({
+      name: condition.name,
+      rules: condition.rules.values,
+      matchTypes: condition.matchTypes.values,
+      stages: condition.stages.values,
+      notifyMinutesBefore: condition.notifyMinutesBefore,
+      enabled: condition.enabled
+    }));
+    
     const botSettings = {
-      conditions: enabledConditions
+      conditions: botConditions
     };
     
     const settingsString = btoa(unescape(encodeURIComponent(JSON.stringify(botSettings))));

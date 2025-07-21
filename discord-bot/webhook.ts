@@ -439,27 +439,27 @@ async function manualNotificationCheck(userId: string, channelId: string) {
       
       // ルール・ステージ・マッチタイプの条件のみチェック
       console.log(`🔍 条件チェック開始: "${condition.name}"`);
-      console.log(`  - ルール条件: [${condition.rules.join(', ')}]`);
-      console.log(`  - マッチタイプ条件: [${condition.matchTypes.join(', ')}]`);
-      console.log(`  - ステージ条件: [${condition.stages.join(', ')}]`);
+      console.log(`  - ルール条件: [${(condition.rules || []).join(', ')}]`);
+      console.log(`  - マッチタイプ条件: [${(condition.matchTypes || []).join(', ')}]`);
+      console.log(`  - ステージ条件: [${(condition.stages || []).join(', ')}]`);
       
       const matchingMatches = currentMatches.filter(match => {
         console.log(`📝 マッチチェック: ${match.rule.name} / ${match.match_type}`);
         
         // ルール条件チェック
-        if (condition.rules.length > 0 && !condition.rules.includes(match.rule.name)) {
+        if (condition.rules && condition.rules.length > 0 && !condition.rules.includes(match.rule.name)) {
           console.log(`  ❌ ルール不一致: ${match.rule.name} not in [${condition.rules.join(', ')}]`);
           return false;
         }
         
         // マッチタイプ条件チェック
-        if (condition.matchTypes.length > 0 && !condition.matchTypes.includes(match.match_type)) {
+        if (condition.matchTypes && condition.matchTypes.length > 0 && !condition.matchTypes.includes(match.match_type)) {
           console.log(`  ❌ マッチタイプ不一致: ${match.match_type} not in [${condition.matchTypes.join(', ')}]`);
           return false;
         }
         
         // ステージ条件チェック
-        if (condition.stages.length > 0) {
+        if (condition.stages && condition.stages.length > 0) {
           const matchStageIds = match.stages.map((stage: any) => stage.id);
           const hasMatchingStage = condition.stages.some(stageId => 
             matchStageIds.includes(stageId)
