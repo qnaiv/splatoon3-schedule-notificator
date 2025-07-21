@@ -73,10 +73,12 @@ const NotificationSettings: React.FC = () => {
     };
     
     const settingsString = btoa(unescape(encodeURIComponent(JSON.stringify(botSettings))));
-    navigator.clipboard.writeText(settingsString).then(() => {
-      alert('Discord Bot用の設定文字列をクリップボードにコピーしました！\nDiscordで「/watch」コマンドと一緒に使用してください。');
+    const watchCommand = `/watch settings:${settingsString}`;
+    
+    navigator.clipboard.writeText(watchCommand).then(() => {
+      alert('Discord Botコマンドをクリップボードにコピーしました！\nDiscordにそのまま貼り付けて実行してください。');
     }).catch(() => {
-      prompt('Discord Bot用の設定文字列（コピーしてDiscordで使用してください）:', settingsString);
+      prompt('Discord Botコマンド（コピーしてDiscordで実行してください）:', watchCommand);
     });
   };
 
