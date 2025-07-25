@@ -276,26 +276,55 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
                 const matchTypeInfo = getMatchTypeInfo(match.match_type || '');
                 const stageNames = match.stages.map(stage => stage.name).join(' / ');
                 
+                // ステージ背景画像の生成
+                const stageImages = match.stages.filter(stage => stage.image).map(stage => stage.image);
+                const backgroundStyle = stageImages.length >= 2 ? {
+                  backgroundImage: `
+                    linear-gradient(135deg, transparent 49%, rgba(255,255,255,0.2) 49%, rgba(255,255,255,0.2) 51%, transparent 51%),
+                    linear-gradient(135deg, rgba(0,0,0,0.1) 50%, transparent 50%),
+                    url('${stageImages[0]}'),
+                    url('${stageImages[1]}')
+                  `,
+                  backgroundSize: 'cover, cover, cover, cover',
+                  backgroundPosition: 'center, center, left center, right center',
+                  backgroundRepeat: 'no-repeat'
+                } : stageImages.length === 1 ? {
+                  backgroundImage: `url('${stageImages[0]}')`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                } : {};
+
                 return (
-                  <div key={`current-${index}`} className={`rounded-xl border p-4 ${matchTypeInfo.bgColor} ${matchTypeInfo.borderColor} backdrop-blur-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${matchTypeInfo.color} backdrop-blur-sm`}>
-                        {getCompactMatchTypeName(match.match_type || '')}
-                      </span>
-                      <span className="bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs px-2 py-1 rounded-full shadow-md animate-pulse">
-                        開催中
-                      </span>
-                    </div>
+                  <div 
+                    key={`current-${index}`} 
+                    className={`rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer relative overflow-hidden ${stageImages.length > 0 ? '' : matchTypeInfo.bgColor}`}
+                    style={backgroundStyle}
+                  >
+                    {/* 可読性向上のための強化オーバーレイ */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/85 via-white/80 to-white/75 backdrop-blur-[2px] rounded-xl"></div>
                     
-                    <div className="space-y-2">
-                      <div className="text-sm font-bold text-gray-800 truncate">
-                        {getCompactRuleName(match.rule.name)}
+                    {/* コンテンツ */}
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${matchTypeInfo.color} bg-white/90 shadow-md`}>
+                          {getCompactMatchTypeName(match.match_type || '')}
+                        </span>
+                        <span className="bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs px-2 py-1 rounded-full shadow-md animate-pulse font-bold">
+                          開催中
+                        </span>
                       </div>
-                      <div className="text-xs text-gray-700 leading-relaxed font-medium">
-                        {stageNames}
-                      </div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        ～{formatTime(match.end_time)}
+                      
+                      <div className="space-y-2">
+                        <div className="text-sm font-bold text-gray-900 truncate drop-shadow-sm">
+                          {getCompactRuleName(match.rule.name)}
+                        </div>
+                        <div className="text-xs text-gray-800 leading-relaxed font-bold drop-shadow-sm">
+                          {stageNames}
+                        </div>
+                        <div className="text-xs text-gray-700 font-bold drop-shadow-sm">
+                          ～{formatTime(match.end_time)}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -337,20 +366,49 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
                     const matchTypeInfo = getMatchTypeInfo(match.match_type || '');
                     const stageNames = match.stages.map(stage => stage.name).join(' / ');
                     
+                    // ステージ背景画像の生成
+                    const stageImages = match.stages.filter(stage => stage.image).map(stage => stage.image);
+                    const backgroundStyle = stageImages.length >= 2 ? {
+                      backgroundImage: `
+                        linear-gradient(135deg, transparent 49%, rgba(255,255,255,0.2) 49%, rgba(255,255,255,0.2) 51%, transparent 51%),
+                        linear-gradient(135deg, rgba(0,0,0,0.1) 50%, transparent 50%),
+                        url('${stageImages[0]}'),
+                        url('${stageImages[1]}')
+                      `,
+                      backgroundSize: 'cover, cover, cover, cover',
+                      backgroundPosition: 'center, center, left center, right center',
+                      backgroundRepeat: 'no-repeat'
+                    } : stageImages.length === 1 ? {
+                      backgroundImage: `url('${stageImages[0]}')`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat'
+                    } : {};
+
                     return (
-                      <div key={`upcoming-${groupIndex}-${index}`} className={`rounded-xl border p-4 ${matchTypeInfo.bgColor} ${matchTypeInfo.borderColor} backdrop-blur-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer`}>
-                        <div className="mb-3">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${matchTypeInfo.color} backdrop-blur-sm`}>
-                            {getCompactMatchTypeName(match.match_type || '')}
-                          </span>
-                        </div>
+                      <div 
+                        key={`upcoming-${groupIndex}-${index}`} 
+                        className={`rounded-xl p-4 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer relative overflow-hidden ${stageImages.length > 0 ? '' : matchTypeInfo.bgColor}`}
+                        style={backgroundStyle}
+                      >
+                        {/* 可読性向上のための強化オーバーレイ */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/85 via-white/80 to-white/75 backdrop-blur-[2px] rounded-xl"></div>
                         
-                        <div className="space-y-2">
-                          <div className="text-sm font-bold text-gray-800 truncate">
-                            {getCompactRuleName(match.rule.name)}
+                        {/* コンテンツ */}
+                        <div className="relative z-10">
+                          <div className="mb-3">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${matchTypeInfo.color} bg-white/90 shadow-md`}>
+                              {getCompactMatchTypeName(match.match_type || '')}
+                            </span>
                           </div>
-                          <div className="text-xs text-gray-700 leading-relaxed font-medium">
-                            {stageNames}
+                          
+                          <div className="space-y-2">
+                            <div className="text-sm font-bold text-gray-900 truncate drop-shadow-sm">
+                              {getCompactRuleName(match.rule.name)}
+                            </div>
+                            <div className="text-xs text-gray-800 leading-relaxed font-bold drop-shadow-sm">
+                              {stageNames}
+                            </div>
                           </div>
                         </div>
                       </div>
