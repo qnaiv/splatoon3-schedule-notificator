@@ -8,6 +8,7 @@ export interface Spla3ApiResponse {
       bankara_challenge?: ScheduleMatch[];
       bankara_open?: ScheduleMatch[];
       x?: ScheduleMatch[];
+      event?: EventMatch[];
     };
   };
 }
@@ -27,6 +28,23 @@ export interface Stage {
   id: string;
   name: string;
   image?: string;
+}
+
+// イベントマッチ型
+export interface EventMatch {
+  start_time: string;
+  end_time: string;
+  rule: {
+    name: string;
+    key: string;
+  };
+  stages: Stage[];
+  event: {
+    id: string;
+    name: string;
+    desc: string;
+  };
+  is_fest: boolean;
 }
 
 // 通知条件設定型
