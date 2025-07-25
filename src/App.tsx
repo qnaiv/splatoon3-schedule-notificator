@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Calendar, Settings, RefreshCw, Users } from 'lucide-react';
+import { Calendar, Settings, RefreshCw, Users, Trophy } from 'lucide-react';
 import NotificationSettings from './components/NotificationSettings';
+import EventMatchesView from './components/EventMatchesView';
 import { useSchedule } from './hooks/useSchedule';
+import { useEventMatches } from './hooks/useEventMatches';
 import { useSettings } from './hooks/useSettings';
 import { ScheduleMatch } from './types';
 
 const App: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<'schedule' | 'settings'>('schedule');
+  const [currentTab, setCurrentTab] = useState<'schedule' | 'events' | 'settings'>('schedule');
   const { 
     currentMatches, 
     upcomingMatches, 
@@ -15,6 +17,13 @@ const App: React.FC = () => {
     refreshData,
     lastUpdated 
   } = useSchedule();
+  const { 
+    currentEvents,
+    upcomingEvents,
+    loading: eventLoading,
+    error: eventError,
+    refreshData: refreshEventData
+  } = useEventMatches();
   const { settings } = useSettings();
 
 
@@ -62,11 +71,14 @@ const App: React.FC = () => {
               )}
               
               <button
-                onClick={refreshData}
-                disabled={loading}
+                onClick={() => {
+                  refreshData();
+                  refreshEventData();
+                }}
+                disabled={loading || eventLoading}
                 className="p-2 text-gray-400 hover:text-blue-500 rounded-lg disabled:opacity-50"
               >
-                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-5 h-5 ${loading || eventLoading ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
@@ -93,22 +105,42 @@ const App: React.FC = () => {
             </button>
             
             <button
+              onClick={() => setCurrentTab('events')}
+              className={`relative flex items-center gap-2 py-4 px-3 font-semibold text-sm transition-all duration-300 ${
+                currentTab === 'events'
+                  ? 'text-purple-600'
+                  : 'text-gray-500 hover:text-purple-500'
+              }`}
+            >
+              <Trophy className="w-5 h-5" />
+              イベントマッチ
+              {currentEvents && currentEvents.length > 0 && (
+                <span className="bg-gradient-to-r from-purple-400 to-pink-500 text-white text-xs px-2.5 py-1 rounded-full shadow-md">
+                  {currentEvents.length}
+                </span>
+              )}
+              {currentTab === 'events' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
+              )}
+            </button>
+            
+            <button
               onClick={() => setCurrentTab('settings')}
               className={`relative flex items-center gap-2 py-4 px-3 font-semibold text-sm transition-all duration-300 ${
                 currentTab === 'settings'
-                  ? 'text-purple-600'
-                  : 'text-gray-500 hover:text-purple-500'
+                  ? 'text-teal-600'
+                  : 'text-gray-500 hover:text-teal-500'
               }`}
             >
               <Settings className="w-5 h-5" />
               Discord設定
               {settings?.notificationConditions && settings.notificationConditions.length > 0 && (
-                <span className="bg-gradient-to-r from-blue-400 to-purple-500 text-white text-xs px-2.5 py-1 rounded-full shadow-md">
+                <span className="bg-gradient-to-r from-teal-400 to-cyan-500 text-white text-xs px-2.5 py-1 rounded-full shadow-md">
                   {settings.notificationConditions.filter(c => c.enabled).length}
                 </span>
               )}
               {currentTab === 'settings' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full"></div>
               )}
             </button>
           </div>
@@ -123,6 +155,15 @@ const App: React.FC = () => {
             upcomingMatches={upcomingMatches}
             loading={loading}
             error={error}
+            formatTime={formatTime}
+            formatDate={formatDate}
+          />
+        ) : currentTab === 'events' ? (
+          <EventMatchesView
+            currentEvents={currentEvents}
+            upcomingEvents={upcomingEvents}
+            loading={eventLoading}
+            error={eventError}
             formatTime={formatTime}
             formatDate={formatDate}
           />
