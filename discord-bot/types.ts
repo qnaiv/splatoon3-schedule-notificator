@@ -18,6 +18,7 @@ export interface UserSettings {
   userId: string;
   channelId: string;
   conditions: NotificationCondition[];
+  lastNotified?: string;
 }
 
 export interface ScheduleMatch {

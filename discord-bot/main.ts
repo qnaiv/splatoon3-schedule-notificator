@@ -54,8 +54,9 @@ const bot = createBot({
       const command = interaction.data.name;
       const userId = interaction.user?.id?.toString();
       const channelId = interaction.channelId?.toString();
+      const guildId = interaction.guildId?.toString();
       
-      console.log("🔧 Debug: コマンド処理開始", { command, userId, channelId });
+      console.log("🔧 Debug: コマンド処理開始", { command, userId, channelId, guildId });
       
       if (!channelId) {
         await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
@@ -90,8 +91,9 @@ const bot = createBot({
               const decoded = decodeURIComponent(Array.prototype.map.call(atob(settingsParam), (c: string) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
               const settings: BotSettings = JSON.parse(decoded);
               
-              // ユーザー設定を保存
-              userSettings.set(userId, {
+              // ユーザー設定を保存（ユーザーID + ギルドIDでユニークキー作成）
+              const settingsKey = `${userId}_${guildId || 'dm'}`;
+              userSettings.set(settingsKey, {
                 userId,
                 channelId,
                 conditions: settings.conditions.filter(c => c.enabled)
@@ -107,7 +109,7 @@ const bot = createBot({
                 }
               });
               
-              console.log(`📝 User ${userId} set ${enabledCount} notification conditions`);
+              console.log(`📝 User ${userId} in guild ${guildId || 'DM'} set ${enabledCount} notification conditions`);
             } catch (error) {
               await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
                 type: 4,
@@ -121,7 +123,8 @@ const bot = createBot({
           }
           
           case "status": {
-            const settings = userSettings.get(userId);
+            const settingsKey = `${userId}_${guildId || 'dm'}`;
+            const settings = userSettings.get(settingsKey);
             
             if (!settings) {
               await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
@@ -167,7 +170,8 @@ const bot = createBot({
           }
           
           case "stop": {
-            userSettings.delete(userId);
+            const settingsKey = `${userId}_${guildId || 'dm'}`;
+            userSettings.delete(settingsKey);
             
             await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
               type: 4,
@@ -177,13 +181,14 @@ const bot = createBot({
               }
             });
             
-            console.log(`🗑️ User ${userId} stopped notifications`);
+            console.log(`🗑️ User ${userId} in guild ${guildId || 'DM'} stopped notifications`);
             break;
           }
           
           case "test": {
             console.log("🔧 Debug: testコマンド実行開始");
-            const settings = userSettings.get(userId);
+            const settingsKey = `${userId}_${guildId || 'dm'}`;
+            const settings = userSettings.get(settingsKey);
             console.log("🔧 Debug: ユーザー設定:", !!settings);
             
             if (!settings) {
@@ -222,7 +227,7 @@ const bot = createBot({
               embeds: [embed]
             });
             
-            console.log(`🧪 Test notification sent to user ${userId}`);
+            console.log(`🧪 Test notification sent to user ${userId} in guild ${guildId || 'DM'}`);
             break;
           }
         }
@@ -302,7 +307,7 @@ async function checkNotifications() {
     const allMatches = getAllMatches(scheduleData);
     let totalNotificationsSent = 0;
     
-    for (const [userId, settings] of userSettings.entries()) {
+    for (const [settingsKey, settings] of userSettings.entries()) {
       for (const condition of settings.conditions) {
         const targetMatches = getMatchesForNotification(allMatches, condition.notifyMinutesBefore);
         const matchingMatches = checkNotificationConditions(targetMatches, condition);
@@ -377,13 +382,15 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
   const command = interaction.data.name;
   const userId = interaction.member?.user?.id || interaction.user?.id;
   const channelId = interaction.channel_id;
+  const guildId = interaction.guild_id;
 
-  console.log("🔧 Debug: コマンド処理", { command, userId, channelId });
+  console.log("🔧 Debug: コマンド処理", { command, userId, channelId, guildId });
 
   try {
     switch (command) {
       case "test": {
-        const settings = userSettings.get(userId);
+        const settingsKey = `${userId}_${guildId || 'dm'}`;
+        const settings = userSettings.get(settingsKey);
         
         if (!settings) {
           return new Response(JSON.stringify({
@@ -525,8 +532,7 @@ function formatSingleConditionWithNumber(condition: NotificationCondition, chann
    ├ マッチタイプ: ${matchTypesText}
    ├ ステージ条件: ${stagesText}
    ├ 最終通知: ${lastNotifiedText}
-   └ 通知先: <#${channelId}>
-`;
+   └ 通知先: <#${channelId}>`;
 }
 
 // @ts-ignore Deno specific import.meta.main
