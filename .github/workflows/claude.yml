@@ -13,10 +13,12 @@ on:
 jobs:
   claude:
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      github.actor == 'qnaiv' && (
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+        (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -25,6 +27,16 @@ jobs:
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
+      - name: Verify owner access
+        run: |
+          echo "Workflow triggered by: ${{ github.actor }}"
+          if [ "${{ github.actor }}" != "qnaiv" ]; then
+            echo "❌ Unauthorized access attempt by ${{ github.actor }}"
+            echo "Only the repository owner (qnaiv) can use Claude Code."
+            exit 1
+          fi
+          echo "✅ Access authorized for owner: ${{ github.actor }}"
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
