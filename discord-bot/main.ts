@@ -501,16 +501,35 @@ function formatSingleConditionWithNumber(condition: NotificationCondition, chann
   const matchTypesText = formatArray(condition.matchTypes);
   const stagesText = formatArray(condition.stages);
 
+  // 最終通知時刻の表示
+  const lastNotifiedText = condition.lastNotified 
+    ? new Date(condition.lastNotified).toLocaleString('ja-JP', { 
+        timeZone: 'Asia/Tokyo',
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : "まだ通知されていません";
+
+  // 有効/無効状態（保存時にフィルタされているので基本的にすべて有効）
+  const statusEmoji = condition.enabled !== false ? "✅" : "❌";
+  const statusText = condition.enabled !== false ? "有効" : "無効";
+
   return `📊 **通知設定 ${current}/${total}**
 
-🔔 **${condition.name}** (${condition.notifyMinutesBefore}分前)
-   ├ ルール: ${rulesText}
-   ├ マッチ: ${matchTypesText}
-   └ ステージ: ${stagesText}
-
-📍 通知先: <#${channelId}>`;
+🔔 **${condition.name}** ${statusEmoji} (${statusText})
+   ├ 通知タイミング: **${condition.notifyMinutesBefore}分前**
+   ├ ルール条件: ${rulesText}
+   ├ マッチタイプ: ${matchTypesText}
+   ├ ステージ条件: ${stagesText}
+   ├ 最終通知: ${lastNotifiedText}
+   └ 通知先: <#${channelId}>
+`;
 }
 
+// @ts-ignore Deno specific import.meta.main
 if (import.meta.main) {
   main().catch(console.error);
 }
