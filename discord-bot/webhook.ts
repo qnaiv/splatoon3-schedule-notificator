@@ -378,7 +378,7 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
         // テスト通知の送信
         const embed = {
           title: "🧪 テスト通知",
-          description: "通知機能は正常に動作しています！",
+          description: "通知機能は正常に動作しています！\n\n詳細なスケジュール: https://qnaiv.github.io/splatoon3-schedule-notificator/",
           color: 0x00ff88,
           timestamp: new Date().toISOString(),
           footer: {
@@ -605,7 +605,7 @@ async function sendMatchNotification(userSettings: UserSettings, condition: any,
     
     const embed = {
       title: "🦑 スプラトゥーン3 通知",
-      description: `**${condition.name}** の条件に合致しました！`,
+      description: `**${condition.name}** の条件に合致しました！\n\n詳細なスケジュール: https://qnaiv.github.io/splatoon3-schedule-notificator/`,
       fields: [
         {
           name: "ルール",
@@ -749,7 +749,7 @@ async function checkNotifications() {
             try {
               const embed = {
                 title: "🦑 スプラトゥーン3 通知",
-                description: `**${condition.name}** の条件に合致しました！`,
+                description: `**${condition.name}** の条件に合致しました！\n\n詳細なスケジュール: https://qnaiv.github.io/splatoon3-schedule-notificator/`,
                 fields: [
                   {
                     name: "ルール",

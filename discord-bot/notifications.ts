@@ -40,7 +40,7 @@ export async function sendNotification(
   try {
     const embed = {
       title: "🦑 スプラトゥーン3 通知",
-      description: `**${notification.condition.name}**\n${notification.condition.notifyMinutesBefore}分前です！`,
+      description: `**${notification.condition.name}**\n${notification.condition.notifyMinutesBefore}分前です！\n\n詳細なスケジュール: https://qnaiv.github.io/splatoon3-schedule-notificator/`,
       fields: [
         {
           name: "マッチ情報",
