@@ -227,37 +227,12 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
   const command = interaction.data.name;
   const userId = interaction.member?.user?.id || interaction.user?.id;
   const channelId = interaction.channel_id;
+  const guildId = interaction.guild_id;
 
-  console.log("🔧 Debug: コマンド処理", { command, userId, channelId });
+  console.log("🔧 Debug: コマンド処理", { command, userId, channelId, guildId });
 
   try {
     switch (command) {
-      case "test": {
-        const settings = userSettings.get(userId);
-        
-        if (!settings) {
-          return new Response(JSON.stringify({
-            type: 4,
-            data: {
-              content: "❌ 通知設定が見つかりません。先に `/watch` コマンドで設定してください。",
-              flags: 64
-            }
-          }), {
-            headers: { "Content-Type": "application/json" }
-          });
-        }
-
-        return new Response(JSON.stringify({
-          type: 4,
-          data: {
-            content: "🧪 テスト通知を送信します...",
-            flags: 64
-          }
-        }), {
-          headers: { "Content-Type": "application/json" }
-        });
-      }
-      
       case "watch": {
         const settingsParam = interaction.data.options?.find((opt: any) => opt.name === "settings")?.value;
         
@@ -275,18 +250,19 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
 
         try {
           // Base64デコードしてJSON解析
-          const decoded = decodeURIComponent(escape(atob(settingsParam)));
+          const decoded = decodeURIComponent(Array.prototype.map.call(atob(settingsParam), (c: string) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
           const settings: BotSettings = JSON.parse(decoded);
           
-          // ユーザー設定を保存（メモリ内）
-          userSettings.set(userId, {
+          // ユーザー設定を保存（ユーザーID + ギルドIDでユニークキー作成）
+          const settingsKey = `${userId}_${guildId || 'dm'}`;
+          userSettings.set(settingsKey, {
             userId,
             channelId,
             conditions: settings.conditions.filter(c => c.enabled)
           });
           
           // バッチ更新対象に追加
-          pendingUpdates.add(userId);
+          pendingUpdates.add(settingsKey);
           
           const enabledCount = settings.conditions.filter(c => c.enabled).length;
           
@@ -313,7 +289,8 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
       }
       
       case "status": {
-        const settings = userSettings.get(userId);
+        const settingsKey = `${userId}_${guildId || 'dm'}`;
+        const settings = userSettings.get(settingsKey);
         
         if (!settings) {
           return new Response(JSON.stringify({
@@ -327,26 +304,49 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
           });
         }
         
-        const conditionsList = settings.conditions
-          .map(c => `• ${c.name} (${c.notifyMinutesBefore}分前)`)
-          .join("\n");
-          
-        return new Response(JSON.stringify({
-          type: 4,
-          data: {
-            content: `📊 **現在の通知設定**\n\n${conditionsList}\n\n📍 通知先: <#${channelId}>`,
-            flags: 64
-          }
-        }), {
-          headers: { "Content-Type": "application/json" }
+        if (settings.conditions.length === 0) {
+          return new Response(JSON.stringify({
+            type: 4,
+            data: {
+              content: "❌ 有効な通知設定がありません。",
+              flags: 64
+            }
+          }), {
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
+        // 最初のレスポンス（必須）
+        await fetch(`https://discord.com/api/v10/interactions/${interaction.id}/${interaction.token}/callback`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: 4,
+            data: {
+              content: `📋 通知設定詳細を送信中... (${settings.conditions.length}件)`,
+              flags: 64
+            }
+          })
         });
+
+        // 各条件を個別のメッセージとして送信
+        for (let i = 0; i < settings.conditions.length; i++) {
+          const condition = settings.conditions[i];
+          const content = formatSingleConditionWithNumber(condition, channelId, i + 1, settings.conditions.length);
+          
+          await sendSimpleMessage(channelId, content);
+        }
+        
+        // 空のレスポンスを返す
+        return new Response(null, { status: 204 });
       }
       
       case "stop": {
-        userSettings.delete(userId);
+        const settingsKey = `${userId}_${guildId || 'dm'}`;
+        userSettings.delete(settingsKey);
         
         // バッチ削除対象に追加（KVからも削除される）
-        pendingUpdates.add(userId);
+        pendingUpdates.add(settingsKey);
         
         return new Response(JSON.stringify({
           type: 4,
@@ -359,8 +359,49 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
         });
       }
       
+      case "test": {
+        const settingsKey = `${userId}_${guildId || 'dm'}`;
+        const settings = userSettings.get(settingsKey);
+        
+        if (!settings) {
+          return new Response(JSON.stringify({
+            type: 4,
+            data: {
+              content: "❌ 通知設定が見つかりません。先に `/watch` コマンドで設定してください。",
+              flags: 64
+            }
+          }), {
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
+        // テスト通知の送信
+        const embed = {
+          title: "🧪 テスト通知",
+          description: "通知機能は正常に動作しています！",
+          color: 0x00ff88,
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Splatoon3 Schedule Bot"
+          }
+        };
+        
+        await sendSimpleMessage(channelId, "", [embed]);
+
+        return new Response(JSON.stringify({
+          type: 4,
+          data: {
+            content: "✅ テスト通知を送信しました。",
+            flags: 64
+          }
+        }), {
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+      
       case "check": {
-        const settings = userSettings.get(userId);
+        const settingsKey = `${userId}_${guildId || 'dm'}`;
+        const settings = userSettings.get(settingsKey);
         
         if (!settings) {
           return new Response(JSON.stringify({
@@ -375,7 +416,7 @@ async function handleSlashCommand(interaction: any): Promise<Response> {
         }
 
         // 即座に通知チェックを実行
-        manualNotificationCheck(userId, channelId);
+        manualNotificationCheck(settingsKey, channelId);
         
         return new Response(JSON.stringify({
           type: 4,
@@ -620,7 +661,7 @@ async function sendMatchNotification(userSettings: UserSettings, condition: any,
 }
 
 // シンプルメッセージ送信
-async function sendSimpleMessage(channelId: string, content: string): Promise<void> {
+async function sendSimpleMessage(channelId: string, content: string, embeds: any[] = []): Promise<void> {
   try {
     await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
       method: "POST",
@@ -628,14 +669,58 @@ async function sendSimpleMessage(channelId: string, content: string): Promise<vo
         "Authorization": `Bot ${DISCORD_TOKEN}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ content })
+      body: JSON.stringify({ content, embeds })
     });
   } catch (error) {
     console.error("メッセージ送信エラー:", error);
   }
 }
 
+// 番号付き単一条件の詳細情報をフォーマットする関数
+function formatSingleConditionWithNumber(condition: NotificationCondition, channelId: string, current: number, total: number): string {
+  const formatArray = (items: string[], emptyText: string = "制限なし"): string => {
+    if (items.length === 0) return emptyText;
+    
+    // 長い配列は改行で整理
+    if (items.join(", ").length > 50) {
+      return "\n      " + items.join(", ");
+    }
+    return items.join(", ");
+  };
+
+  const rulesText = formatArray(condition.rules);
+  const matchTypesText = formatArray(condition.matchTypes);
+  const stagesText = formatArray(condition.stages);
+
+  // 最終通知時刻の表示
+  const lastNotifiedText = condition.lastNotified 
+    ? new Date(condition.lastNotified).toLocaleString('ja-JP', { 
+        timeZone: 'Asia/Tokyo',
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : "まだ通知されていません";
+
+  // 有効/無効状態（保存時にフィルタされているので基本的にすべて有効）
+  const statusEmoji = condition.enabled !== false ? "✅" : "❌";
+  const statusText = condition.enabled !== false ? "有効" : "無効";
+
+  return `📊 **通知設定 ${current}/${total}**
+
+🔔 **${condition.name}** ${statusEmoji} (${statusText})
+   ├ 通知タイミング: **${condition.notifyMinutesBefore}分前**
+   ├ ルール条件: ${rulesText}
+   ├ マッチタイプ: ${matchTypesText}
+   ├ ステージ条件: ${stagesText}
+   ├ 最終通知: ${lastNotifiedText}
+   └ 通知先: <#${channelId}>`;
+}
+
 // 定期的な通知チェック（10分ごと）
+
 async function checkNotifications() {
   console.log("🔄 定期通知チェックを開始...");
   
