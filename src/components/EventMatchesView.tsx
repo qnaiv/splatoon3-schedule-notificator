@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Trophy, Users, Clock } from 'lucide-react';
+import { Calendar, Trophy } from 'lucide-react';
 import { EventMatch } from '../types';
 
 interface EventMatchesViewProps {
@@ -20,19 +20,6 @@ const EventMatchesView: React.FC<EventMatchesViewProps> = ({
   formatDate
 }) => {
 
-  const formatDuration = (startTime: string, endTime: string) => {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    const durationMs = end.getTime() - start.getTime();
-    const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
-    const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (durationHours > 0) {
-      return `${durationHours}時間${durationMinutes > 0 ? durationMinutes + '分' : ''}`;
-    } else {
-      return `${durationMinutes}分`;
-    }
-  };
 
   // イベントをグルーピング
   const groupEventsByType = (events: EventMatch[]) => {
@@ -163,7 +150,7 @@ const EventMatchesView: React.FC<EventMatchesViewProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {Object.entries(groupEventsByType(currentEvents)).map(([eventId, events], groupIndex) => {
+            {Object.entries(groupEventsByType(currentEvents)).map(([, events], groupIndex) => {
               const event = events[0]; // 代表のイベント情報を使用
               const eventTypeInfo = getEventTypeColor(event.event?.name);
               const stageNames = event.stages?.map(stage => stage?.name || '不明').join(' / ') || '不明';
@@ -304,7 +291,7 @@ const EventMatchesView: React.FC<EventMatchesViewProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {Object.entries(groupEventsByType(upcomingEvents)).slice(0, 5).map(([eventId, events], groupIndex) => {
+            {Object.entries(groupEventsByType(upcomingEvents)).slice(0, 5).map(([, events], groupIndex) => {
               const event = events[0]; // 代表のイベント情報を使用
               const eventTypeInfo = getEventTypeColor(event.event?.name);
               const stageNames = event.stages?.map(stage => stage?.name || '不明').join(' / ') || '不明';
