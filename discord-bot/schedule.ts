@@ -16,43 +16,103 @@ export async function fetchScheduleData(): Promise<ScheduleData | null> {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      console.error(`❌ Schedule fetch failed: ${errorMessage}`);
+      throw new Error(errorMessage);
     }
 
     const data: ScheduleData = await response.json();
 
+    // データの基本的な検証
+    if (!data || !data.data || !data.data.result) {
+      throw new Error('Invalid schedule data structure received');
+    }
+
     console.log(`✅ Schedule data fetched successfully`);
     console.log(`📊 Last updated: ${data.lastUpdated}`);
+    console.log(`📊 Data source: ${data.source}`);
 
     return data;
   } catch (error) {
-    console.error('❌ Failed to fetch schedule data:', error);
+    if (error instanceof Error) {
+      console.error(`❌ Failed to fetch schedule data: ${error.message}`);
+      console.error(`❌ Error details:`, error.stack);
+    } else {
+      console.error(
+        '❌ Failed to fetch schedule data with unknown error:',
+        error
+      );
+    }
     return null;
   }
 }
 
 export function getAllMatches(data: ScheduleData): ScheduleMatch[] {
-  const result = data.data.result;
+  try {
+    const result = data.data.result;
 
-  return [
-    ...(result.regular || []).map((match) => ({
-      ...match,
-      match_type: 'レギュラーマッチ',
-    })),
-    ...(result.bankara_challenge || []).map((match) => ({
-      ...match,
-      match_type: 'バンカラマッチ(チャレンジ)',
-    })),
-    ...(result.bankara_open || []).map((match) => ({
-      ...match,
-      match_type: 'バンカラマッチ(オープン)',
-    })),
-    ...(result.x || []).map((match) => ({ ...match, match_type: 'Xマッチ' })),
-  ];
+    // 各マッチタイプに安全にアクセス
+    const matches: ScheduleMatch[] = [];
+
+    if (result.regular && Array.isArray(result.regular)) {
+      matches.push(
+        ...result.regular.map((match) => ({
+          ...match,
+          match_type: 'レギュラーマッチ',
+        }))
+      );
+    }
+
+    if (result.bankara_challenge && Array.isArray(result.bankara_challenge)) {
+      matches.push(
+        ...result.bankara_challenge.map((match) => ({
+          ...match,
+          match_type: 'バンカラマッチ(チャレンジ)',
+        }))
+      );
+    }
+
+    if (result.bankara_open && Array.isArray(result.bankara_open)) {
+      matches.push(
+        ...result.bankara_open.map((match) => ({
+          ...match,
+          match_type: 'バンカラマッチ(オープン)',
+        }))
+      );
+    }
+
+    if (result.x && Array.isArray(result.x)) {
+      matches.push(
+        ...result.x.map((match) => ({
+          ...match,
+          match_type: 'Xマッチ',
+        }))
+      );
+    }
+
+    console.log(`📊 Total matches found: ${matches.length}`);
+    return matches;
+  } catch (error) {
+    console.error('❌ Error processing matches:', error);
+    return [];
+  }
 }
 
 export function getAllEventMatches(data: ScheduleData): EventMatch[] {
-  return data.data.result.event || [];
+  try {
+    const result = data.data.result;
+
+    if (!result.event || !Array.isArray(result.event)) {
+      console.log('📊 No event matches found');
+      return [];
+    }
+
+    console.log(`📊 Event matches found: ${result.event.length}`);
+    return result.event;
+  } catch (error) {
+    console.error('❌ Error processing event matches:', error);
+    return [];
+  }
 }
 
 export function getUpcomingMatches(

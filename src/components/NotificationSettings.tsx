@@ -18,6 +18,8 @@ import {
   GameRule,
   MatchType,
 } from '../types';
+import { convertUIToBotCondition } from '../types/shared';
+import { encodeToBase64, getUniqueItems } from '../utils';
 import { useSettings } from '../hooks/useSettings';
 import { useSchedule } from '../hooks/useSchedule';
 import { useEventMatches } from '../hooks/useEventMatches';
@@ -84,26 +86,14 @@ const NotificationSettings: React.FC = () => {
     }
 
     // WebUI形式からDiscord Bot形式に変換
-    const botConditions = enabledConditions.map((condition) => ({
-      name: condition.name,
-      rules: condition.rules.values,
-      matchTypes: condition.matchTypes.values,
-      stages: condition.stages.values,
-      notifyMinutesBefore: condition.notifyMinutesBefore,
-      enabled: condition.enabled,
-    }));
+    const botConditions = enabledConditions.map(convertUIToBotCondition);
 
     const botSettings = {
       conditions: botConditions,
     };
 
-    // UTF-8文字列を安全にBase64エンコード
-    const utf8String = JSON.stringify(botSettings);
-    const settingsString = btoa(
-      encodeURIComponent(utf8String).replace(/%([0-9A-F]{2})/g, (_, p1) =>
-        String.fromCharCode(parseInt(p1, 16))
-      )
-    );
+    // UTF-8文字列を安全にBase64エンコード（新しいユーティリティ関数を使用）
+    const settingsString = encodeToBase64(botSettings);
     const watchCommand = `/watch settings:${settingsString}`;
 
     navigator.clipboard
@@ -665,14 +655,11 @@ const NotificationConditionEditor: React.FC<
                   {/* イベント選択 */}
                   <ConditionSection
                     title="イベント"
-                    options={Array.from(
-                      new Set(eventMatches.map((em) => em.event.id))
-                    ).map((id) => {
-                      const event = eventMatches.find(
-                        (em) => em.event.id === id
-                      )?.event;
-                      return { id, name: event?.name || id };
-                    })}
+                    options={getUniqueItems(
+                      eventMatches,
+                      (em) => em.event.id,
+                      (em) => ({ id: em.event.id, name: em.event.name })
+                    )}
                     selectedValues={formData.eventMatches.eventIds.values}
                     operator={formData.eventMatches.eventIds.operator}
                     onSelectionChange={(values) =>

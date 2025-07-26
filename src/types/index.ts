@@ -1,3 +1,5 @@
+import { generateUUID } from '../utils';
+
 // スプラトゥーン3 API レスポンス型
 export interface Spla3ApiResponse {
   lastUpdated: string;
@@ -140,7 +142,7 @@ export interface ApiConfig {
 
 // デフォルト設定
 export const DEFAULT_SETTINGS: UserSettings = {
-  userId: crypto.randomUUID(),
+  userId: generateUUID(),
   notificationConditions: [],
   globalSettings: {
     enableNotifications: true,

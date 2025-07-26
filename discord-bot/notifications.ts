@@ -50,39 +50,54 @@ export function checkEventNotificationConditions(
   eventMatches: EventMatch[],
   condition: NotificationCondition
 ): EventMatch[] {
+  // イベントマッチ条件が無効または未定義の場合は空配列を返す
   if (!condition.eventMatches?.enabled) {
     return [];
   }
 
+  const eventMatchCondition = condition.eventMatches;
+
   return eventMatches.filter((eventMatch) => {
-    // イベントID条件チェック
-    if (
-      condition.eventMatches!.eventIds.length > 0 &&
-      !condition.eventMatches!.eventIds.includes(eventMatch.event.id)
-    ) {
-      return false;
-    }
-
-    // イベントルール条件チェック
-    if (
-      condition.eventMatches!.eventRules.length > 0 &&
-      !condition.eventMatches!.eventRules.includes(eventMatch.rule.name)
-    ) {
-      return false;
-    }
-
-    // イベントステージ条件チェック
-    if (condition.eventMatches!.eventStages.length > 0) {
-      const matchStageIds = eventMatch.stages.map((stage) => stage.id);
-      const hasMatchingStage = condition.eventMatches!.eventStages.some(
-        (stageId) => matchStageIds.includes(stageId)
-      );
-      if (!hasMatchingStage) {
-        return false;
+    try {
+      // イベントID条件チェック（安全なnullチェック）
+      if (
+        eventMatchCondition.eventIds &&
+        eventMatchCondition.eventIds.length > 0
+      ) {
+        if (!eventMatchCondition.eventIds.includes(eventMatch.event.id)) {
+          return false;
+        }
       }
-    }
 
-    return true;
+      // イベントルール条件チェック（安全なnullチェック）
+      if (
+        eventMatchCondition.eventRules &&
+        eventMatchCondition.eventRules.length > 0
+      ) {
+        if (!eventMatchCondition.eventRules.includes(eventMatch.rule.name)) {
+          return false;
+        }
+      }
+
+      // イベントステージ条件チェック（安全なnullチェック）
+      if (
+        eventMatchCondition.eventStages &&
+        eventMatchCondition.eventStages.length > 0
+      ) {
+        const matchStageIds = eventMatch.stages.map((stage) => stage.id);
+        const hasMatchingStage = eventMatchCondition.eventStages.some(
+          (stageId) => matchStageIds.includes(stageId)
+        );
+        if (!hasMatchingStage) {
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('❌ Error checking event notification condition:', error);
+      return false;
+    }
   });
 }
 
