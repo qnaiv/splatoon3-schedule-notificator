@@ -19,8 +19,7 @@ export interface BotNotificationCondition extends BaseNotificationCondition {
   stages: string[];
   eventMatches?: {
     enabled: boolean;
-    eventIds: string[];
-    eventRules: string[];
+    eventTypes: string[];
     eventStages: string[];
   };
   lastNotified?: string;
@@ -46,11 +45,7 @@ export interface UINotificationCondition extends BaseNotificationCondition {
   };
   eventMatches: {
     enabled: boolean;
-    eventIds: {
-      operator: 'AND' | 'OR';
-      values: string[];
-    };
-    eventRules: {
+    eventTypes: {
       operator: 'AND' | 'OR';
       values: string[];
     };
@@ -85,8 +80,7 @@ export function convertUIToBotCondition(
   if (uiCondition.eventMatches.enabled) {
     botCondition.eventMatches = {
       enabled: true,
-      eventIds: uiCondition.eventMatches.eventIds.values,
-      eventRules: uiCondition.eventMatches.eventRules.values,
+      eventTypes: uiCondition.eventMatches.eventTypes.values,
       eventStages: uiCondition.eventMatches.eventStages.values,
     };
   }

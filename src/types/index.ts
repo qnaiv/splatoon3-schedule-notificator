@@ -73,13 +73,9 @@ export interface NotificationCondition {
   // イベントマッチ条件
   eventMatches: {
     enabled: boolean;
-    eventIds: {
+    eventTypes: {
       operator: 'AND' | 'OR';
-      values: string[];
-    };
-    eventRules: {
-      operator: 'AND' | 'OR';
-      values: GameRule[];
+      values: EventType[];
     };
     eventStages: {
       operator: 'AND' | 'OR';
@@ -107,6 +103,17 @@ export type MatchType =
   | 'バンカラマッチ(チャレンジ)'
   | 'レギュラーマッチ'
   | 'イベントマッチ';
+
+// イベントタイプ
+export type EventType =
+  | 'フェス'
+  | 'ビッグラン'
+  | 'ナワバリ大戦'
+  | 'チャレンジ'
+  | 'シーズンイベント'
+  | 'テストイベント'
+  | 'コラボイベント'
+  | 'TriColor';
 
 // ユーザー設定
 export interface UserSettings {
@@ -166,4 +173,15 @@ export const MATCH_TYPES: MatchType[] = [
   'バンカラマッチ(オープン)',
   'Xマッチ',
   'イベントマッチ',
+];
+
+export const EVENT_TYPES: EventType[] = [
+  'フェス',
+  'ビッグラン',
+  'ナワバリ大戦',
+  'チャレンジ',
+  'シーズンイベント',
+  'テストイベント',
+  'コラボイベント',
+  'TriColor',
 ];

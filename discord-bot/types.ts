@@ -12,8 +12,7 @@ export interface NotificationCondition {
   // イベントマッチ条件
   eventMatches?: {
     enabled: boolean;
-    eventIds: string[];
-    eventRules: string[];
+    eventTypes: string[];
     eventStages: string[];
   };
   notifyMinutesBefore: number;
