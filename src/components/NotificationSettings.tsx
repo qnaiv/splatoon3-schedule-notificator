@@ -1,24 +1,44 @@
 import React, { useState } from 'react';
-import { Plus, Settings, Bell, BellOff, Trash2, Edit3, Save, X } from 'lucide-react';
-import { NotificationCondition, GAME_RULES, MATCH_TYPES, GameRule, MatchType } from '../types';
+import {
+  Plus,
+  Settings,
+  Bell,
+  BellOff,
+  Trash2,
+  Edit3,
+  Save,
+  X,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
+import {
+  NotificationCondition,
+  GAME_RULES,
+  MATCH_TYPES,
+  GameRule,
+  MatchType,
+} from '../types';
 import { useSettings } from '../hooks/useSettings';
 import { useSchedule } from '../hooks/useSchedule';
+import { useEventMatches } from '../hooks/useEventMatches';
 
 const NotificationSettings: React.FC = () => {
-  const { 
-    settings, 
-    loading, 
-    error, 
-    addNotificationCondition, 
-    updateNotificationCondition, 
-    deleteNotificationCondition, 
-    toggleNotificationCondition
+  const {
+    settings,
+    loading,
+    error,
+    addNotificationCondition,
+    updateNotificationCondition,
+    deleteNotificationCondition,
+    toggleNotificationCondition,
   } = useSettings();
-  
+
   const { allStages } = useSchedule();
-  
+  const { eventMatches } = useEventMatches();
+
   const [showEditor, setShowEditor] = useState(false);
-  const [editingCondition, setEditingCondition] = useState<NotificationCondition | null>(null);
+  const [editingCondition, setEditingCondition] =
+    useState<NotificationCondition | null>(null);
 
   if (loading) {
     return (
@@ -47,41 +67,58 @@ const NotificationSettings: React.FC = () => {
   };
 
   const handleGenerateDiscordSettings = () => {
-    if (!settings?.notificationConditions || settings.notificationConditions.length === 0) {
+    if (
+      !settings?.notificationConditions ||
+      settings.notificationConditions.length === 0
+    ) {
       alert('まず通知条件を設定してください。');
       return;
     }
-    
-    const enabledConditions = settings.notificationConditions.filter(c => c.enabled);
+
+    const enabledConditions = settings.notificationConditions.filter(
+      (c) => c.enabled
+    );
     if (enabledConditions.length === 0) {
       alert('有効な通知条件がありません。');
       return;
     }
-    
+
     // WebUI形式からDiscord Bot形式に変換
-    const botConditions = enabledConditions.map(condition => ({
+    const botConditions = enabledConditions.map((condition) => ({
       name: condition.name,
       rules: condition.rules.values,
       matchTypes: condition.matchTypes.values,
       stages: condition.stages.values,
       notifyMinutesBefore: condition.notifyMinutesBefore,
-      enabled: condition.enabled
+      enabled: condition.enabled,
     }));
-    
+
     const botSettings = {
-      conditions: botConditions
+      conditions: botConditions,
     };
-    
+
     // UTF-8文字列を安全にBase64エンコード
     const utf8String = JSON.stringify(botSettings);
-    const settingsString = btoa(encodeURIComponent(utf8String).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))));
+    const settingsString = btoa(
+      encodeURIComponent(utf8String).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+        String.fromCharCode(parseInt(p1, 16))
+      )
+    );
     const watchCommand = `/watch settings:${settingsString}`;
-    
-    navigator.clipboard.writeText(watchCommand).then(() => {
-      alert('Discord Botコマンドをクリップボードにコピーしました！\nDiscordにそのまま貼り付けて実行してください。');
-    }).catch(() => {
-      prompt('Discord Botコマンド（コピーしてDiscordで実行してください）:', watchCommand);
-    });
+
+    navigator.clipboard
+      .writeText(watchCommand)
+      .then(() => {
+        alert(
+          'Discord Botコマンドをクリップボードにコピーしました！\nDiscordにそのまま貼り付けて実行してください。'
+        );
+      })
+      .catch(() => {
+        prompt(
+          'Discord Botコマンド（コピーしてDiscordで実行してください）:',
+          watchCommand
+        );
+      });
   };
 
   return (
@@ -92,7 +129,7 @@ const NotificationSettings: React.FC = () => {
           <Settings className="w-8 h-8 text-blue-500" />
           <h1 className="text-3xl font-bold text-gray-800">通知設定</h1>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <button
             onClick={handleGenerateDiscordSettings}
@@ -101,7 +138,7 @@ const NotificationSettings: React.FC = () => {
             <Bell className="w-4 h-4" />
             Discord設定生成
           </button>
-          
+
           <button
             onClick={handleCreateNew}
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
@@ -121,7 +158,7 @@ const NotificationSettings: React.FC = () => {
         <p className="text-indigo-700 text-sm mb-3">
           このアプリで設定した条件をDiscord Botで使用できます。
         </p>
-        
+
         {/* Bot追加ボタン */}
         <div className="mb-4">
           <a
@@ -131,26 +168,33 @@ const NotificationSettings: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.010c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.010c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
             </svg>
             DiscordサーバーにBotを追加
           </a>
         </div>
-        
+
         <div className="text-indigo-700 text-sm space-y-1">
-          <p><strong>使用方法:</strong></p>
+          <p>
+            <strong>使用方法:</strong>
+          </p>
           <ol className="list-decimal list-inside ml-4 space-y-1">
             <li>上のボタンでBotをDiscordサーバーに追加</li>
             <li>通知条件を設定して有効にする</li>
             <li>「Discord設定生成」ボタンで設定文字列を生成</li>
             <li>Discordで「/watch 設定文字列」コマンドを実行</li>
           </ol>
-          
+
           <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
             <p className="text-xs text-yellow-800">
-              <strong>⚠️ 通知タイミングについて：</strong><br/>
-              Discord Botは10分間隔で自動チェックを行うため、設定した時刻から±10分程度の誤差が発生する場合があります。<br/>
-              即座に確認したい場合は、Discordで <code className="bg-yellow-100 px-1 rounded">/check</code> コマンドをお使いください。
+              <strong>⚠️ 通知タイミングについて：</strong>
+              <br />
+              Discord
+              Botは10分間隔で自動チェックを行うため、設定した時刻から±10分程度の誤差が発生する場合があります。
+              <br />
+              即座に確認したい場合は、Discordで{' '}
+              <code className="bg-yellow-100 px-1 rounded">/check</code>{' '}
+              コマンドをお使いください。
             </p>
           </div>
         </div>
@@ -158,12 +202,17 @@ const NotificationSettings: React.FC = () => {
 
       {/* 既存の通知条件一覧 */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-800">設定済み通知条件</h2>
-        
-        {!settings?.notificationConditions || settings.notificationConditions.length === 0 ? (
+        <h2 className="text-xl font-semibold text-gray-800">
+          設定済み通知条件
+        </h2>
+
+        {!settings?.notificationConditions ||
+        settings.notificationConditions.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg">
             <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-4">まだ通知条件が設定されていません</p>
+            <p className="text-gray-600 mb-4">
+              まだ通知条件が設定されていません
+            </p>
             <button
               onClick={handleCreateNew}
               className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
@@ -177,7 +226,9 @@ const NotificationSettings: React.FC = () => {
               <NotificationConditionCard
                 key={condition.id}
                 condition={condition}
-                onToggle={(enabled) => toggleNotificationCondition(condition.id, enabled)}
+                onToggle={(enabled) =>
+                  toggleNotificationCondition(condition.id, enabled)
+                }
                 onEdit={() => handleEdit(condition)}
                 onDelete={() => deleteNotificationCondition(condition.id)}
               />
@@ -191,10 +242,14 @@ const NotificationSettings: React.FC = () => {
         <NotificationConditionEditor
           condition={editingCondition}
           allStages={allStages}
+          eventMatches={eventMatches}
           onSave={async (conditionData) => {
             try {
               if (editingCondition) {
-                await updateNotificationCondition(editingCondition.id, conditionData);
+                await updateNotificationCondition(
+                  editingCondition.id,
+                  conditionData
+                );
               } else {
                 await addNotificationCondition(conditionData);
               }
@@ -227,7 +282,7 @@ const NotificationConditionCard: React.FC<NotificationConditionCardProps> = ({
   condition,
   onToggle,
   onEdit,
-  onDelete
+  onDelete,
 }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -242,7 +297,9 @@ const NotificationConditionCard: React.FC<NotificationConditionCardProps> = ({
   };
 
   return (
-    <div className={`border rounded-lg p-4 ${condition.enabled ? 'bg-white border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+    <div
+      className={`border rounded-lg p-4 ${condition.enabled ? 'bg-white border-blue-200' : 'bg-gray-50 border-gray-200'}`}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
@@ -250,38 +307,74 @@ const NotificationConditionCard: React.FC<NotificationConditionCardProps> = ({
               onClick={() => onToggle(!condition.enabled)}
               className={`p-1 rounded ${condition.enabled ? 'text-blue-500' : 'text-gray-400'}`}
             >
-              {condition.enabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+              {condition.enabled ? (
+                <Bell className="w-5 h-5" />
+              ) : (
+                <BellOff className="w-5 h-5" />
+              )}
             </button>
-            <h3 className={`font-medium ${condition.enabled ? 'text-gray-800' : 'text-gray-500'}`}>
+            <h3
+              className={`font-medium ${condition.enabled ? 'text-gray-800' : 'text-gray-500'}`}
+            >
               {condition.name}
             </h3>
           </div>
-          
+
           <div className="ml-8 space-y-1 text-sm">
-            <p className={condition.enabled ? 'text-gray-600' : 'text-gray-400'}>
-              <span className="font-medium">通知タイミング:</span> {condition.notifyMinutesBefore}分前
+            <p
+              className={condition.enabled ? 'text-gray-600' : 'text-gray-400'}
+            >
+              <span className="font-medium">通知タイミング:</span>{' '}
+              {condition.notifyMinutesBefore}分前
             </p>
-            
+
             {condition.rules.values.length > 0 && (
-              <p className={condition.enabled ? 'text-gray-600' : 'text-gray-400'}>
-                <span className="font-medium">ルール:</span> {condition.rules.values.join(`, `)}
+              <p
+                className={
+                  condition.enabled ? 'text-gray-600' : 'text-gray-400'
+                }
+              >
+                <span className="font-medium">ルール:</span>{' '}
+                {condition.rules.values.join(`, `)}
               </p>
             )}
-            
+
             {condition.matchTypes.values.length > 0 && (
-              <p className={condition.enabled ? 'text-gray-600' : 'text-gray-400'}>
-                <span className="font-medium">マッチタイプ:</span> {condition.matchTypes.values.join(`, `)}
+              <p
+                className={
+                  condition.enabled ? 'text-gray-600' : 'text-gray-400'
+                }
+              >
+                <span className="font-medium">マッチタイプ:</span>{' '}
+                {condition.matchTypes.values.join(`, `)}
               </p>
             )}
-            
+
             {condition.stages.values.length > 0 && (
-              <p className={condition.enabled ? 'text-gray-600' : 'text-gray-400'}>
-                <span className="font-medium">ステージ:</span> {condition.stages.values.length}件選択
+              <p
+                className={
+                  condition.enabled ? 'text-gray-600' : 'text-gray-400'
+                }
+              >
+                <span className="font-medium">ステージ:</span>{' '}
+                {condition.stages.values.length}件選択
+              </p>
+            )}
+
+            {condition.eventMatches?.enabled && (
+              <p
+                className={
+                  condition.enabled ? 'text-gray-600' : 'text-gray-400'
+                }
+              >
+                <span className="font-medium">イベントマッチ:</span> 有効
+                {condition.eventMatches.eventIds.values.length > 0 &&
+                  ` (${condition.eventMatches.eventIds.values.length}イベント)`}
               </p>
             )}
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <button
             onClick={onEdit}
@@ -289,7 +382,7 @@ const NotificationConditionCard: React.FC<NotificationConditionCardProps> = ({
           >
             <Edit3 className="w-4 h-4" />
           </button>
-          
+
           <button
             onClick={handleDelete}
             className={`p-2 rounded ${confirmDelete ? 'text-red-600 bg-red-50' : 'text-gray-400 hover:text-red-500'}`}
@@ -298,7 +391,7 @@ const NotificationConditionCard: React.FC<NotificationConditionCardProps> = ({
           </button>
         </div>
       </div>
-      
+
       {confirmDelete && (
         <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
           もう一度クリックすると削除されます
@@ -312,38 +405,66 @@ const NotificationConditionCard: React.FC<NotificationConditionCardProps> = ({
 interface NotificationConditionEditorProps {
   condition: NotificationCondition | null;
   allStages: Array<{ id: string; name: string }>;
-  onSave: (condition: Omit<NotificationCondition, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  eventMatches: Array<{
+    event: { id: string; name: string };
+    rule: { name: string };
+    stages: Array<{ id: string; name: string }>;
+  }>;
+  onSave: (
+    condition: Omit<NotificationCondition, 'id' | 'createdAt' | 'updatedAt'>
+  ) => void;
   onCancel: () => void;
 }
 
-const NotificationConditionEditor: React.FC<NotificationConditionEditorProps> = ({
-  condition,
-  allStages,
-  onSave,
-  onCancel
-}) => {
+const NotificationConditionEditor: React.FC<
+  NotificationConditionEditorProps
+> = ({ condition, allStages, eventMatches, onSave, onCancel }) => {
   const [formData, setFormData] = useState(() => ({
     name: condition?.name || '',
     enabled: condition?.enabled ?? true,
     stages: condition?.stages || { operator: 'OR' as const, values: [] },
     rules: condition?.rules || { operator: 'OR' as const, values: [] },
-    matchTypes: condition?.matchTypes || { operator: 'OR' as const, values: [] },
-    notifyMinutesBefore: condition?.notifyMinutesBefore || 10
+    matchTypes: condition?.matchTypes || {
+      operator: 'OR' as const,
+      values: [],
+    },
+    eventMatches: condition?.eventMatches || {
+      enabled: false,
+      eventIds: { operator: 'OR' as const, values: [] },
+      eventRules: { operator: 'OR' as const, values: [] },
+      eventStages: { operator: 'OR' as const, values: [] },
+    },
+    notifyMinutesBefore: condition?.notifyMinutesBefore || 10,
   }));
+
+  const [expandedSections, setExpandedSections] = useState({
+    basicMatch: true,
+    eventMatch: false,
+  });
+
+  const toggleSection = (section: 'basicMatch' | 'eventMatch') => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
   const handleSave = () => {
     if (!formData.name.trim()) {
       alert('条件名を入力してください');
       return;
     }
-    
-    if (formData.rules.values.length === 0 && 
-        formData.matchTypes.values.length === 0 && 
-        formData.stages.values.length === 0) {
+
+    if (
+      formData.rules.values.length === 0 &&
+      formData.matchTypes.values.length === 0 &&
+      formData.stages.values.length === 0 &&
+      !formData.eventMatches.enabled
+    ) {
       alert('少なくとも一つの条件を設定してください');
       return;
     }
-    
+
     onSave(formData);
   };
 
@@ -370,7 +491,9 @@ const NotificationConditionEditor: React.FC<NotificationConditionEditorProps> = 
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className="w-full border rounded-lg px-3 py-2"
                 placeholder="例: ガチホコ＋お気に入りステージ"
               />
@@ -378,14 +501,18 @@ const NotificationConditionEditor: React.FC<NotificationConditionEditorProps> = 
 
             {/* 通知タイミング */}
             <div>
-              <label className="block text-sm font-medium mb-2">通知タイミング</label>
+              <label className="block text-sm font-medium mb-2">
+                通知タイミング
+              </label>
               <div className="flex items-center gap-2">
                 <select
                   value={formData.notifyMinutesBefore}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    notifyMinutesBefore: parseInt(e.target.value) 
-                  })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      notifyMinutesBefore: parseInt(e.target.value),
+                    })
+                  }
                   className="border rounded px-3 py-2"
                 >
                   <option value={10}>10分前</option>
@@ -397,52 +524,261 @@ const NotificationConditionEditor: React.FC<NotificationConditionEditorProps> = 
                 <span className="text-sm text-gray-600">に通知</span>
               </div>
               <p className="text-xs text-gray-500 mt-2 bg-yellow-50 border border-yellow-200 rounded-md p-2">
-                ⚠️ <strong>通知について：</strong>Discord Botは10分間隔で条件をチェックするため、設定時刻から±10分程度の誤差が発生する場合があります。無料枠での運用のためご了承ください。
+                ⚠️ <strong>通知について：</strong>Discord
+                Botは10分間隔で条件をチェックするため、設定時刻から±10分程度の誤差が発生する場合があります。無料枠での運用のためご了承ください。
               </p>
             </div>
 
-            {/* ルール選択 */}
-            <ConditionSection
-              title="ルール"
-              options={GAME_RULES.map(rule => ({ id: rule, name: rule }))}
-              selectedValues={formData.rules.values}
-              operator={formData.rules.operator}
-              onSelectionChange={(values) => 
-                setFormData({ ...formData, rules: { ...formData.rules, values: values as GameRule[] } })
-              }
-              onOperatorChange={(operator) => 
-                setFormData({ ...formData, rules: { ...formData.rules, operator } })
-              }
-            />
+            {/* 通常マッチ条件 */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection('basicMatch')}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
+              >
+                <span className="font-medium text-gray-900">
+                  通常マッチ条件
+                </span>
+                {expandedSections.basicMatch ? (
+                  <ChevronUp className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-500" />
+                )}
+              </button>
 
-            {/* マッチタイプ選択 */}
-            <ConditionSection
-              title="マッチタイプ"
-              options={MATCH_TYPES.map(type => ({ id: type, name: type }))}
-              selectedValues={formData.matchTypes.values}
-              operator={formData.matchTypes.operator}
-              onSelectionChange={(values) => 
-                setFormData({ ...formData, matchTypes: { ...formData.matchTypes, values: values as MatchType[] } })
-              }
-              onOperatorChange={(operator) => 
-                setFormData({ ...formData, matchTypes: { ...formData.matchTypes, operator } })
-              }
-            />
+              {expandedSections.basicMatch && (
+                <div className="p-4 border-t space-y-6">
+                  {/* ルール選択 */}
+                  <ConditionSection
+                    title="ルール"
+                    options={GAME_RULES.map((rule) => ({
+                      id: rule,
+                      name: rule,
+                    }))}
+                    selectedValues={formData.rules.values}
+                    operator={formData.rules.operator}
+                    onSelectionChange={(values) =>
+                      setFormData({
+                        ...formData,
+                        rules: {
+                          ...formData.rules,
+                          values: values as GameRule[],
+                        },
+                      })
+                    }
+                    onOperatorChange={(operator) =>
+                      setFormData({
+                        ...formData,
+                        rules: { ...formData.rules, operator },
+                      })
+                    }
+                  />
 
-            {/* ステージ選択 */}
-            <ConditionSection
-              title="ステージ"
-              options={allStages}
-              selectedValues={formData.stages.values}
-              operator={formData.stages.operator}
-              onSelectionChange={(values) => 
-                setFormData({ ...formData, stages: { ...formData.stages, values } })
-              }
-              onOperatorChange={(operator) => 
-                setFormData({ ...formData, stages: { ...formData.stages, operator } })
-              }
-              isGrid={true}
-            />
+                  {/* マッチタイプ選択 */}
+                  <ConditionSection
+                    title="マッチタイプ"
+                    options={MATCH_TYPES.filter(
+                      (type) => type !== 'イベントマッチ'
+                    ).map((type) => ({ id: type, name: type }))}
+                    selectedValues={formData.matchTypes.values}
+                    operator={formData.matchTypes.operator}
+                    onSelectionChange={(values) =>
+                      setFormData({
+                        ...formData,
+                        matchTypes: {
+                          ...formData.matchTypes,
+                          values: values as MatchType[],
+                        },
+                      })
+                    }
+                    onOperatorChange={(operator) =>
+                      setFormData({
+                        ...formData,
+                        matchTypes: { ...formData.matchTypes, operator },
+                      })
+                    }
+                  />
+
+                  {/* ステージ選択 */}
+                  <ConditionSection
+                    title="ステージ"
+                    options={allStages}
+                    selectedValues={formData.stages.values}
+                    operator={formData.stages.operator}
+                    onSelectionChange={(values) =>
+                      setFormData({
+                        ...formData,
+                        stages: { ...formData.stages, values },
+                      })
+                    }
+                    onOperatorChange={(operator) =>
+                      setFormData({
+                        ...formData,
+                        stages: { ...formData.stages, operator },
+                      })
+                    }
+                    isGrid={true}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* イベントマッチ条件 */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection('eventMatch')}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="font-medium text-gray-900">
+                    イベントマッチ条件
+                  </span>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.eventMatches.enabled}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          eventMatches: {
+                            ...formData.eventMatches,
+                            enabled: e.target.checked,
+                          },
+                        })
+                      }
+                      className="mr-2"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <span className="text-sm text-gray-600">有効</span>
+                  </label>
+                </div>
+                {expandedSections.eventMatch ? (
+                  <ChevronUp className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-500" />
+                )}
+              </button>
+
+              {expandedSections.eventMatch && formData.eventMatches.enabled && (
+                <div className="p-4 border-t space-y-6">
+                  {/* イベント選択 */}
+                  <ConditionSection
+                    title="イベント"
+                    options={Array.from(
+                      new Set(eventMatches.map((em) => em.event.id))
+                    ).map((id) => {
+                      const event = eventMatches.find(
+                        (em) => em.event.id === id
+                      )?.event;
+                      return { id, name: event?.name || id };
+                    })}
+                    selectedValues={formData.eventMatches.eventIds.values}
+                    operator={formData.eventMatches.eventIds.operator}
+                    onSelectionChange={(values) =>
+                      setFormData({
+                        ...formData,
+                        eventMatches: {
+                          ...formData.eventMatches,
+                          eventIds: {
+                            ...formData.eventMatches.eventIds,
+                            values,
+                          },
+                        },
+                      })
+                    }
+                    onOperatorChange={(operator) =>
+                      setFormData({
+                        ...formData,
+                        eventMatches: {
+                          ...formData.eventMatches,
+                          eventIds: {
+                            ...formData.eventMatches.eventIds,
+                            operator,
+                          },
+                        },
+                      })
+                    }
+                  />
+
+                  {/* イベントルール選択 */}
+                  <ConditionSection
+                    title="イベントルール"
+                    options={Array.from(
+                      new Set(eventMatches.map((em) => em.rule.name))
+                    ).map((rule) => ({ id: rule, name: rule }))}
+                    selectedValues={formData.eventMatches.eventRules.values}
+                    operator={formData.eventMatches.eventRules.operator}
+                    onSelectionChange={(values) =>
+                      setFormData({
+                        ...formData,
+                        eventMatches: {
+                          ...formData.eventMatches,
+                          eventRules: {
+                            ...formData.eventMatches.eventRules,
+                            values: values as GameRule[],
+                          },
+                        },
+                      })
+                    }
+                    onOperatorChange={(operator) =>
+                      setFormData({
+                        ...formData,
+                        eventMatches: {
+                          ...formData.eventMatches,
+                          eventRules: {
+                            ...formData.eventMatches.eventRules,
+                            operator,
+                          },
+                        },
+                      })
+                    }
+                  />
+
+                  {/* イベントステージ選択 */}
+                  <ConditionSection
+                    title="イベントステージ"
+                    options={Array.from(
+                      new Set(
+                        eventMatches.flatMap((em) => em.stages.map((s) => s.id))
+                      )
+                    ).map((id) => {
+                      const stage = eventMatches
+                        .flatMap((em) => em.stages)
+                        .find((s) => s.id === id);
+                      return { id, name: stage?.name || id };
+                    })}
+                    selectedValues={formData.eventMatches.eventStages.values}
+                    operator={formData.eventMatches.eventStages.operator}
+                    onSelectionChange={(values) =>
+                      setFormData({
+                        ...formData,
+                        eventMatches: {
+                          ...formData.eventMatches,
+                          eventStages: {
+                            ...formData.eventMatches.eventStages,
+                            values,
+                          },
+                        },
+                      })
+                    }
+                    onOperatorChange={(operator) =>
+                      setFormData({
+                        ...formData,
+                        eventMatches: {
+                          ...formData.eventMatches,
+                          eventStages: {
+                            ...formData.eventMatches.eventStages,
+                            operator,
+                          },
+                        },
+                      })
+                    }
+                    isGrid={true}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* ボタン */}
@@ -483,11 +819,11 @@ const ConditionSection: React.FC<ConditionSectionProps> = ({
   options,
   selectedValues,
   onSelectionChange,
-  isGrid = false
+  isGrid = false,
 }) => {
   const handleToggle = (id: string) => {
     if (selectedValues.includes(id)) {
-      onSelectionChange(selectedValues.filter(v => v !== id));
+      onSelectionChange(selectedValues.filter((v) => v !== id));
     } else {
       onSelectionChange([...selectedValues, id]);
     }
@@ -498,9 +834,15 @@ const ConditionSection: React.FC<ConditionSectionProps> = ({
       <div className="flex items-center gap-4 mb-3">
         <label className="text-sm font-medium">{title}</label>
       </div>
-      
-      <div className={isGrid ? 'grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3' : 'space-y-2'}>
-        {options.map(option => (
+
+      <div
+        className={
+          isGrid
+            ? 'grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3'
+            : 'space-y-2'
+        }
+      >
+        {options.map((option) => (
           <label key={option.id} className="flex items-center space-x-2">
             <input
               type="checkbox"
@@ -511,7 +853,7 @@ const ConditionSection: React.FC<ConditionSectionProps> = ({
           </label>
         ))}
       </div>
-      
+
       {selectedValues.length > 0 && (
         <p className="text-xs text-gray-500 mt-2">
           {selectedValues.length}件選択中 (いずれかを含む)

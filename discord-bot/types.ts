@@ -9,6 +9,13 @@ export interface NotificationCondition {
   rules: string[];
   matchTypes: string[];
   stages: string[];
+  // イベントマッチ条件
+  eventMatches?: {
+    enabled: boolean;
+    eventIds: string[];
+    eventRules: string[];
+    eventStages: string[];
+  };
   notifyMinutesBefore: number;
   enabled: boolean;
   lastNotified?: string; // この条件で最後に通知した時刻
@@ -43,6 +50,15 @@ export interface ScheduleMatch extends ApiMatch {
   match_type: string;
 }
 
+export interface EventMatch extends ApiMatch {
+  event: {
+    id: string;
+    name: string;
+    desc: string;
+  };
+  is_fest: boolean;
+}
+
 export interface ScheduleData {
   lastUpdated: string;
   source: string;
@@ -52,13 +68,14 @@ export interface ScheduleData {
       bankara_challenge?: ApiMatch[];
       bankara_open?: ApiMatch[];
       x?: ApiMatch[];
+      event?: EventMatch[];
     };
   };
 }
 
 export interface NotificationMessage {
   condition: NotificationCondition;
-  match: ScheduleMatch;
+  match: ScheduleMatch | EventMatch;
   minutesUntilStart: number;
 }
 
