@@ -61,8 +61,8 @@ jobs:
           # Optional: Trigger when specific user is assigned to an issue
           # assignee_trigger: "claude-bot"
           
-          # Optional: Allow Claude to run specific command
-          allowed_tools: "Bash(npm install),Bash(npm run build),Bash(npm run dev),Bash(npm run preview),Bash(npm run fetch-schedule),Bash(git *),Bash(gh *)"
+          # Allow Claude to run lint and formatting commands (merged with main)
+          allowed_tools: "Bash(npm install),Bash(npm run build),Bash(npm run dev),Bash(npm run preview),Bash(npm run fetch-schedule),Bash(npm run lint),Bash(npm run lint:fix),Bash(npm run format),Bash(npm run typecheck),Bash(git *),Bash(gh *)"
           
           # Custom instructions for Claude to customize its behavior for your project
           custom_instructions: |
@@ -70,6 +70,13 @@ jobs:
             コミットメッセージやプルリクエストの内容はすべて日本語で記載してください。
             GitHub flowに則って開発を行ってください。
             コードの説明や提案も日本語で行ってください。
+            
+            ## コード品質について
+            - コードを生成・修正した後は必ず npm run lint でlintチェックを実行してください
+            - lintエラーがある場合は npm run lint:fix で自動修正を試してください
+            - 未使用のimportや変数は削除してください
+            - TypeScriptの型チェックも npm run typecheck で確認してください
+            - 最終的にlintエラーのないコードを提供してください
           
           # Optional: Custom environment variables for Claude
           # claude_env: |

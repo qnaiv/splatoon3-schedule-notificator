@@ -78,7 +78,7 @@ export const useSettings = () => {
     } finally {
       setLoading(false);
     }
-  }, [openDB]);
+  }, [openDB, saveSettingsToDB]);
 
   // 設定保存（内部関数）
   const saveSettingsToDB = useCallback(async (newSettings: UserSettings): Promise<void> => {
