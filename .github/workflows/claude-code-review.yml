@@ -64,6 +64,12 @@ jobs:
             コミットメッセージやプルリクエストの内容はすべて日本語で記載してください。
             GitHub flowに則って開発を行ってください。
             コードレビューのコメントも日本語で行ってください。
+            
+            ## コード品質レビューについて
+            - lintエラー（未使用import、未使用変数など）があれば指摘してください
+            - TypeScriptの型安全性について確認してください
+            - コードフォーマットの一貫性をチェックしてください
+            - パフォーマンスやセキュリティの観点からもレビューしてください
 
           # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
           # use_sticky_comment: true

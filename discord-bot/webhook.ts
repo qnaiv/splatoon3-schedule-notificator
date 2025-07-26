@@ -1,7 +1,6 @@
-import { verifySignature } from "https://deno.land/x/discordeno@18.0.0/mod.ts";
 import { BotSettings, UserSettings, NotificationCondition } from "./types.ts";
 import { fetchScheduleData, getAllMatches, getMatchesForNotification } from "./schedule.ts";
-import { checkNotificationConditions, sendNotification, createNotificationMessage, shouldNotify } from "./notifications.ts";
+import { checkNotificationConditions, createNotificationMessage, shouldNotify } from "./notifications.ts";
 
 // 環境変数の取得
 const DISCORD_TOKEN = Deno.env.get("DISCORD_TOKEN");
@@ -743,7 +742,8 @@ async function checkNotifications() {
         
         for (const match of matchingMatches) {
           if (shouldNotify(match, condition)) {
-            const notification = createNotificationMessage(condition, match);
+            // 通知メッセージを作成（ログ用）
+            createNotificationMessage(condition, match);
             
             // Discord通知送信
             try {
