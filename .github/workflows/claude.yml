@@ -64,11 +64,12 @@ jobs:
           # Optional: Allow Claude to run specific command
           allowed_tools: "Bash(npm install),Bash(npm run build),Bash(npm run dev),Bash(npm run preview),Bash(npm run fetch-schedule),Bash(git *),Bash(gh *)"
           
-          # Optional: Add custom instructions for Claude to customize its behavior for your project
-          # custom_instructions: |
-          #   Follow our coding standards
-          #   Ensure all new code has tests
-          #   Use TypeScript for new files
+          # Custom instructions for Claude to customize its behavior for your project
+          custom_instructions: |
+            必ず日本語で回答してください。
+            コミットメッセージやプルリクエストの内容はすべて日本語で記載してください。
+            GitHub flowに則って開発を行ってください。
+            コードの説明や提案も日本語で行ってください。
           
           # Optional: Custom environment variables for Claude
           # claude_env: |

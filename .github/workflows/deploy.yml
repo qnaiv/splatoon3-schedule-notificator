@@ -8,6 +8,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     permissions:
       id-token: write # Needed for auth with Deno Deploy
@@ -16,6 +17,8 @@ jobs:
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Install Deno
         uses: denoland/setup-deno@v2
@@ -25,13 +28,29 @@ jobs:
       - name: Backup user settings before deploy
         run: |
           echo "🚀 Triggering backup before deployment..."
-          curl -X POST "https://qnaiv-splatoon3-s-12.deno.dev/api/backup" \
-            -H "Authorization: Bearer ${{ secrets.BACKUP_SECRET }}" \
-            -H "Content-Type: application/json" \
-            --max-time 30 \
-            --fail \
-            --silent \
-            --show-error || echo "⚠️ Backup failed or bot not running - continuing with deployment"
+          
+          # リトライロジック付きでバックアップAPIを呼び出し
+          for i in {1..3}; do
+            echo "🔄 Backup attempt $i/3..."
+            if curl -X POST "https://qnaiv-splatoon3-s-12.deno.dev/api/backup" \
+              -H "Authorization: Bearer ${{ secrets.BACKUP_SECRET }}" \
+              -H "Content-Type: application/json" \
+              --max-time 30 \
+              --fail \
+              --silent \
+              --show-error; then
+              echo "✅ Backup completed successfully"
+              break
+            else
+              echo "❌ Backup attempt $i failed"
+              if [ $i -lt 3 ]; then
+                echo "⏳ Waiting 2 seconds before retry..."
+                sleep 2
+              else
+                echo "⚠️ Backup failed after 3 attempts - continuing with deployment"
+              fi
+            fi
+          done
 
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
