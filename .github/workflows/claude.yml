@@ -61,8 +61,8 @@ jobs:
           # Optional: Trigger when specific user is assigned to an issue
           # assignee_trigger: "claude-bot"
           
-          # Allow Claude to run lint and formatting commands
-          allowed_tools: "Bash(npm run lint),Bash(npm run lint:fix),Bash(npm run format),Bash(npm run typecheck),Bash(npm run build)"
+          # Allow Claude to run lint and formatting commands (merged with main)
+          allowed_tools: "Bash(npm install),Bash(npm run build),Bash(npm run dev),Bash(npm run preview),Bash(npm run fetch-schedule),Bash(npm run lint),Bash(npm run lint:fix),Bash(npm run format),Bash(npm run typecheck),Bash(git *),Bash(gh *)"
           
           # Custom instructions for Claude to customize its behavior for your project
           custom_instructions: |

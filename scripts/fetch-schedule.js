@@ -138,6 +138,14 @@ function transformScheduleData(apiData) {
       }));
     }
     
+    // イベントマッチ
+    if (apiData.result.event) {
+      transformedData.data.result.event = apiData.result.event.map(match => ({
+        ...match,
+        // イベントマッチには既にname, descが含まれているのでmatch_typeを付加しない
+      }));
+    }
+    
     // フェスマッチ（存在する場合）
     if (apiData.result.fest) {
       transformedData.data.result.fest = apiData.result.fest.map(match => ({
