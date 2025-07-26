@@ -59,22 +59,12 @@ export function checkEventNotificationConditions(
 
   return eventMatches.filter((eventMatch) => {
     try {
-      // イベントID条件チェック（安全なnullチェック）
+      // イベントタイプ条件チェック（安全なnullチェック）
       if (
-        eventMatchCondition.eventIds &&
-        eventMatchCondition.eventIds.length > 0
+        eventMatchCondition.eventTypes &&
+        eventMatchCondition.eventTypes.length > 0
       ) {
-        if (!eventMatchCondition.eventIds.includes(eventMatch.event.id)) {
-          return false;
-        }
-      }
-
-      // イベントルール条件チェック（安全なnullチェック）
-      if (
-        eventMatchCondition.eventRules &&
-        eventMatchCondition.eventRules.length > 0
-      ) {
-        if (!eventMatchCondition.eventRules.includes(eventMatch.rule.name)) {
+        if (!eventMatchCondition.eventTypes.includes(eventMatch.event.name)) {
           return false;
         }
       }
