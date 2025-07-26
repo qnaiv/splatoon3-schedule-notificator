@@ -1,3 +1,5 @@
+import { generateUUID } from '../utils';
+
 // スプラトゥーン3 API レスポンス型
 export interface Spla3ApiResponse {
   lastUpdated: string;
@@ -52,32 +54,59 @@ export interface NotificationCondition {
   id: string;
   name: string;
   enabled: boolean;
-  
+
   stages: {
     operator: 'AND' | 'OR';
     values: string[];
   };
-  
+
   rules: {
     operator: 'AND' | 'OR';
     values: GameRule[];
   };
-  
+
   matchTypes: {
     operator: 'AND' | 'OR';
     values: MatchType[];
   };
-  
+
+  // イベントマッチ条件
+  eventMatches: {
+    enabled: boolean;
+    eventIds: {
+      operator: 'AND' | 'OR';
+      values: string[];
+    };
+    eventRules: {
+      operator: 'AND' | 'OR';
+      values: GameRule[];
+    };
+    eventStages: {
+      operator: 'AND' | 'OR';
+      values: string[];
+    };
+  };
+
   notifyMinutesBefore: number;
   createdAt: string;
   updatedAt: string;
 }
 
 // ゲームルール
-export type GameRule = 'ガチホコ' | 'ガチヤグラ' | 'ガチエリア' | 'ガチアサリ' | 'ナワバリバトル';
+export type GameRule =
+  | 'ガチホコ'
+  | 'ガチヤグラ'
+  | 'ガチエリア'
+  | 'ガチアサリ'
+  | 'ナワバリバトル';
 
 // マッチタイプ
-export type MatchType = 'Xマッチ' | 'バンカラマッチ(オープン)' | 'バンカラマッチ(チャレンジ)' | 'レギュラーマッチ';
+export type MatchType =
+  | 'Xマッチ'
+  | 'バンカラマッチ(オープン)'
+  | 'バンカラマッチ(チャレンジ)'
+  | 'レギュラーマッチ'
+  | 'イベントマッチ';
 
 // ユーザー設定
 export interface UserSettings {
@@ -113,13 +142,13 @@ export interface ApiConfig {
 
 // デフォルト設定
 export const DEFAULT_SETTINGS: UserSettings = {
-  userId: crypto.randomUUID(),
+  userId: generateUUID(),
   notificationConditions: [],
   globalSettings: {
     enableNotifications: true,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    lastUpdated: new Date().toISOString()
-  }
+    lastUpdated: new Date().toISOString(),
+  },
 };
 
 // 利用可能な選択肢
@@ -128,12 +157,13 @@ export const GAME_RULES: GameRule[] = [
   'ガチエリア',
   'ガチヤグラ',
   'ガチホコ',
-  'ガチアサリ'
+  'ガチアサリ',
 ];
 
 export const MATCH_TYPES: MatchType[] = [
   'レギュラーマッチ',
   'バンカラマッチ(チャレンジ)',
   'バンカラマッチ(オープン)',
-  'Xマッチ'
+  'Xマッチ',
+  'イベントマッチ',
 ];
