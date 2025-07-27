@@ -45,6 +45,8 @@ jobs:
 
       - name: Build WebUI
         run: npm run build
+        env:
+          GITHUB_PAGES: true
 
       - name: Download existing API files
         run: |
