@@ -863,6 +863,20 @@ function formatSingleConditionWithNumber(
   const matchTypesText = formatArray(condition.matchTypes);
   const stagesText = formatArray(condition.stages);
 
+  // イベントマッチ条件の表示
+  let eventMatchText = '';
+  if (condition.eventMatches?.enabled) {
+    const eventTypesText = formatArray(condition.eventMatches.eventTypes);
+    const eventStagesText = formatArray(condition.eventMatches.eventStages);
+    eventMatchText = `
+   ├ 🎪 イベントマッチ: 有効
+   ├   ├ イベントタイプ: ${eventTypesText}
+   ├   └ イベントステージ: ${eventStagesText}`;
+  } else {
+    eventMatchText = `
+   ├ 🎪 イベントマッチ: 無効`;
+  }
+
   // 最終通知時刻の表示
   const lastNotifiedText = condition.lastNotified
     ? new Date(condition.lastNotified).toLocaleString('ja-JP', {
@@ -885,7 +899,7 @@ function formatSingleConditionWithNumber(
    ├ 通知タイミング: **${condition.notifyMinutesBefore}分前**
    ├ ルール条件: ${rulesText}
    ├ マッチタイプ: ${matchTypesText}
-   ├ ステージ条件: ${stagesText}
+   ├ ステージ条件: ${stagesText}${eventMatchText}
    ├ 最終通知: ${lastNotifiedText}
    └ 通知先: <#${channelId}>`;
 }
