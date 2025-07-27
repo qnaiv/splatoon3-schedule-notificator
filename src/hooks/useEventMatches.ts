@@ -3,11 +3,12 @@ import { Spla3ApiResponse, EventMatch } from '../types';
 
 // 環境別API設定
 const API_CONFIG = {
-  baseUrl: import.meta.env.VITE_API_BASE_URL || 
-    (import.meta.env.PROD 
-      ? 'https://qnaiv.github.io/splatoon3-schedule-notificator' 
+  baseUrl:
+    import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.PROD
+      ? '' // Vercelのrewriteプロキシを使用
       : 'http://localhost:3000'),
-  scheduleEndpoint: '/api/schedule.json'
+  scheduleEndpoint: '/api/schedule.json',
 };
 
 export const useEventMatches = () => {
@@ -19,32 +20,38 @@ export const useEventMatches = () => {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   // スケジュールデータ取得
-  const fetchEventData = useCallback(async (): Promise<Spla3ApiResponse | null> => {
-    try {
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.scheduleEndpoint}`, {
-        cache: 'no-cache',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+  const fetchEventData =
+    useCallback(async (): Promise<Spla3ApiResponse | null> => {
+      try {
+        const response = await fetch(
+          `${API_CONFIG.baseUrl}${API_CONFIG.scheduleEndpoint}`,
+          {
+            cache: 'no-cache',
+            headers: {
+              'Cache-Control': 'no-cache',
+              Pragma: 'no-cache',
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch event data: ${response.status} ${response.statusText}`
+          );
         }
-      });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch event data: ${response.status} ${response.statusText}`);
+        const data: Spla3ApiResponse = await response.json();
+        return data;
+      } catch (err) {
+        console.error('Failed to fetch event data:', err);
+        throw err;
       }
-
-      const data: Spla3ApiResponse = await response.json();
-      return data;
-    } catch (err) {
-      console.error('Failed to fetch event data:', err);
-      throw err;
-    }
-  }, []);
+    }, []);
 
   // 現在開催中のイベントを抽出
   const getCurrentEvents = useCallback((events: EventMatch[]): EventMatch[] => {
     const now = new Date();
-    return events.filter(event => {
+    return events.filter((event) => {
       const start = new Date(event.start_time);
       const end = new Date(event.end_time);
       return now >= start && now <= end;
@@ -52,15 +59,21 @@ export const useEventMatches = () => {
   }, []);
 
   // 今後のイベントを抽出
-  const getUpcomingEvents = useCallback((events: EventMatch[]): EventMatch[] => {
-    const now = new Date();
-    return events
-      .filter(event => {
-        const start = new Date(event.start_time);
-        return start > now;
-      })
-      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-  }, []);
+  const getUpcomingEvents = useCallback(
+    (events: EventMatch[]): EventMatch[] => {
+      const now = new Date();
+      return events
+        .filter((event) => {
+          const start = new Date(event.start_time);
+          return start > now;
+        })
+        .sort(
+          (a, b) =>
+            new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+        );
+    },
+    []
+  );
 
   // データ更新
   const updateEventData = useCallback(async () => {
@@ -91,12 +104,13 @@ export const useEventMatches = () => {
         totalEvents: events.length,
         currentEvents: current.length,
         upcomingEvents: upcoming.length,
-        lastUpdated: data.lastUpdated
+        lastUpdated: data.lastUpdated,
       });
-
     } catch (err) {
       console.error('Failed to update event data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch event data');
+      setError(
+        err instanceof Error ? err.message : 'Failed to fetch event data'
+      );
     } finally {
       setLoading(false);
     }
@@ -108,15 +122,18 @@ export const useEventMatches = () => {
   }, [updateEventData]);
 
   // 特定期間のイベント取得
-  const getEventsInTimeRange = useCallback((startTime: Date, endTime: Date): EventMatch[] => {
-    return eventMatches.filter(event => {
-      const eventStart = new Date(event.start_time);
-      const eventEnd = new Date(event.end_time);
-      
-      // 指定された時間帯と重複するイベントを取得
-      return (eventStart < endTime && eventEnd > startTime);
-    });
-  }, [eventMatches]);
+  const getEventsInTimeRange = useCallback(
+    (startTime: Date, endTime: Date): EventMatch[] => {
+      return eventMatches.filter((event) => {
+        const eventStart = new Date(event.start_time);
+        const eventEnd = new Date(event.end_time);
+
+        // 指定された時間帯と重複するイベントを取得
+        return eventStart < endTime && eventEnd > startTime;
+      });
+    },
+    [eventMatches]
+  );
 
   // 初期データ読み込み
   useEffect(() => {
@@ -125,9 +142,12 @@ export const useEventMatches = () => {
 
   // 定期更新（10分おき）
   useEffect(() => {
-    const interval = setInterval(() => {
-      updateEventData();
-    }, 10 * 60 * 1000); // 10分
+    const interval = setInterval(
+      () => {
+        updateEventData();
+      },
+      10 * 60 * 1000
+    ); // 10分
 
     return () => clearInterval(interval);
   }, [updateEventData]);
@@ -138,15 +158,15 @@ export const useEventMatches = () => {
     currentEvents,
     upcomingEvents,
     lastUpdated,
-    
+
     // 状態
     loading,
     error,
-    
+
     // アクション
     refreshData,
-    
+
     // ユーティリティ
-    getEventsInTimeRange
+    getEventsInTimeRange,
   };
 };
