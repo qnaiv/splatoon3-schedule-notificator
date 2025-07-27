@@ -13,7 +13,6 @@ import {
   NotificationCondition,
   GAME_RULES,
   MATCH_TYPES,
-  EVENT_TYPES,
   GameRule,
   MatchType,
   EventType,
@@ -22,6 +21,7 @@ import { convertUIToBotCondition } from '../types/shared';
 import { encodeToBase64 } from '../utils';
 import { useSettings } from '../hooks/useSettings';
 import { useSchedule } from '../hooks/useSchedule';
+import { useDataTypes } from '../hooks/useDataTypes';
 
 const NotificationSettings: React.FC = () => {
   const {
@@ -35,13 +35,18 @@ const NotificationSettings: React.FC = () => {
   } = useSettings();
 
   const { allStages } = useSchedule();
+  const {
+    eventTypes,
+    loading: dataTypesLoading,
+    error: dataTypesError,
+  } = useDataTypes();
 
   const [showBasicMatchEditor, setShowBasicMatchEditor] = useState(false);
   const [showEventMatchEditor, setShowEventMatchEditor] = useState(false);
   const [editingCondition, setEditingCondition] =
     useState<NotificationCondition | null>(null);
 
-  if (loading) {
+  if (loading || dataTypesLoading) {
     return (
       <div className="flex justify-center items-center min-h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -49,10 +54,10 @@ const NotificationSettings: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error || dataTypesError) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-600">エラー: {error}</p>
+        <p className="text-red-600">エラー: {error || dataTypesError}</p>
       </div>
     );
   }
@@ -290,6 +295,7 @@ const NotificationSettings: React.FC = () => {
         <EventMatchConditionEditor
           condition={editingCondition}
           allStages={allStages}
+          eventTypes={eventTypes}
           onSave={async (conditionData) => {
             try {
               if (editingCondition) {
@@ -657,6 +663,7 @@ const BasicMatchConditionEditor: React.FC<BasicMatchConditionEditorProps> = ({
 interface EventMatchConditionEditorProps {
   condition: NotificationCondition | null;
   allStages: Array<{ id: string; name: string }>;
+  eventTypes: string[];
   onSave: (
     condition: Omit<NotificationCondition, 'id' | 'createdAt' | 'updatedAt'>
   ) => void;
@@ -666,6 +673,7 @@ interface EventMatchConditionEditorProps {
 const EventMatchConditionEditor: React.FC<EventMatchConditionEditorProps> = ({
   condition,
   allStages,
+  eventTypes,
   onSave,
   onCancel,
 }) => {
@@ -766,7 +774,7 @@ const EventMatchConditionEditor: React.FC<EventMatchConditionEditorProps> = ({
             {/* イベントタイプ選択 */}
             <ConditionSection
               title="イベント"
-              options={EVENT_TYPES.map((type) => ({
+              options={eventTypes.map((type) => ({
                 id: type,
                 name: type,
               }))}

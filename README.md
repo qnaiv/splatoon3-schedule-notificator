@@ -7,8 +7,9 @@
 - 🤖 **Discord Bot**: スラッシュコマンドでDiscordに直接通知
 - 🔔 **カスタム通知**: ステージ・ルール・マッチタイプを組み合わせた柔軟な通知条件設定
 - 🌐 **WebUI**: ブラウザで簡単に通知条件を設定
+- 📝 **テキストファイル管理**: イベント・ステージ情報をテキストファイルで外部管理（保守性向上）
 - 🆓 **完全無料**: GitHub Pages + GitHub Actions + Deno Deployで運用コストゼロ
-- ⚡ **高速**: 静的ファイル配信でサーバーレス
+- ⚡ **高速**: 静的ファイル配信でサーバーレス・セッション内キャッシュでパフォーマンス最適化
 - 🔄 **自動更新**: 2時間ごとにスケジュールを自動取得
 - 📊 **リアルタイム**: 現在開催中と今後の予定を表示
 
@@ -119,7 +120,10 @@ splatoon3-schedule-notificator/
 │   │   └── NotificationSettings.tsx
 │   ├── hooks/
 │   │   ├── useSettings.ts
-│   │   └── useSchedule.ts
+│   │   ├── useSchedule.ts
+│   │   └── useDataTypes.ts      # テキストファイル読み込み
+│   ├── utils/
+│   │   └── index.ts             # セッション内キャッシュ機能
 │   └── types/
 ├── discord-bot/                  # Discord Bot (Deno)
 │   ├── webhook.ts               # メインBot実装
@@ -128,6 +132,9 @@ splatoon3-schedule-notificator/
 │   └── notifications.ts         # 通知ロジック
 ├── scripts/
 │   └── fetch-schedule.js        # スケジュール取得スクリプト
+├── data/                         # テキストファイル管理
+│   ├── event-types.txt          # イベントタイプ一覧
+│   └── stage-types.txt          # ステージタイプ一覧
 ├── .github/workflows/
 │   ├── deploy.yml               # WebUI自動デプロイ
 │   └── update-schedule.yml      # スケジュール自動更新
@@ -140,6 +147,8 @@ splatoon3-schedule-notificator/
 - **NotificationSettings.tsx**: 通知条件設定UI・Discord設定生成
 - **useSettings.ts**: IndexedDBとの設定管理
 - **useSchedule.ts**: スケジュールデータ取得
+- **useDataTypes.ts**: テキストファイルからイベント・ステージ情報を動的読み込み
+- **utils/index.ts**: セッション内キャッシュ機能でパフォーマンス最適化
 
 #### Discord Bot
 - **webhook.ts**: Webhook受信・スラッシュコマンド処理
