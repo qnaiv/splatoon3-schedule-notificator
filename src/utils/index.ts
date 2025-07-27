@@ -120,48 +120,72 @@ export function safeAccess<T>(value: T | null | undefined, fallback: T): T {
   return value != null ? value : fallback;
 }
 
+// セッション内キャッシュ（ページリロード時にクリアされる）
+let cachedEventTypes: string[] | null = null;
+let cachedStageTypes: string[] | null = null;
+
 /**
  * テキストファイルからイベントタイプリストを読み込み
+ * セッション内でキャッシュし、同一セッション内での再取得を防ぐ
  *
  * @returns イベントタイプの配列
  */
 export async function loadEventTypes(): Promise<string[]> {
+  // キャッシュが存在する場合はそれを返す
+  if (cachedEventTypes !== null) {
+    return cachedEventTypes;
+  }
+
   try {
     const response = await fetch('/data/event-types.txt');
     if (!response.ok) {
       throw new Error(`Failed to load event types: ${response.status}`);
     }
     const text = await response.text();
-    return text
+    const eventTypes = text
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
+
+    // キャッシュに保存
+    cachedEventTypes = eventTypes;
+    return eventTypes;
   } catch (error) {
     console.error('Failed to load event types from file:', error);
-    // フォールバックとして空配列を返す
+    // フォールバックとして空配列を返す（キャッシュはしない）
     return [];
   }
 }
 
 /**
  * テキストファイルからステージタイプリストを読み込み
+ * セッション内でキャッシュし、同一セッション内での再取得を防ぐ
  *
  * @returns ステージタイプの配列
  */
 export async function loadStageTypes(): Promise<string[]> {
+  // キャッシュが存在する場合はそれを返す
+  if (cachedStageTypes !== null) {
+    return cachedStageTypes;
+  }
+
   try {
     const response = await fetch('/data/stage-types.txt');
     if (!response.ok) {
       throw new Error(`Failed to load stage types: ${response.status}`);
     }
     const text = await response.text();
-    return text
+    const stageTypes = text
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
+
+    // キャッシュに保存
+    cachedStageTypes = stageTypes;
+    return stageTypes;
   } catch (error) {
     console.error('Failed to load stage types from file:', error);
-    // フォールバックとして空配列を返す
+    // フォールバックとして空配列を返す（キャッシュはしない）
     return [];
   }
 }

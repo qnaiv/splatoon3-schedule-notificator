@@ -101,6 +101,10 @@ FORCE_UPDATE=true node fetch-schedule.js
 - `tsconfig.json` - TypeScript設定
 - `.gitignore` - `public/`ディレクトリを含む
 
+### データ管理ファイル
+- `data/event-types.txt` - イベントタイプ一覧（1行1項目）
+- `data/stage-types.txt` - ステージタイプ一覧（1行1項目）
+
 ## デプロイ構成
 
 ### GitHub Pages
@@ -142,3 +146,14 @@ FORCE_UPDATE=true node fetch-schedule.js
 - **変更前**: Deploy from branch (gh-pages)
 - **変更後**: GitHub Actions
 - **影響**: `gh-pages`ブランチは不要になった
+
+### テキストファイル管理への移行 (2025-01-27)
+- **変更内容**: ハードコードされたEVENT_TYPES配列をテキストファイル管理に移行
+- **影響ファイル**:
+  - `src/types/index.ts` - EVENT_TYPES配列削除、EventType型をstring型に変更
+  - `src/hooks/useDataTypes.ts` - 新規作成、テキストファイル読み込み用カスタムフック
+  - `src/utils/index.ts` - loadEventTypes/loadStageTypes関数追加、セッション内キャッシュ実装
+  - `src/components/NotificationSettings.tsx` - useDataTypesフック使用に変更
+- **パフォーマンス改善**: セッション内キャッシュでHTTPリクエスト最適化
+  - ページリロード時: 新しいセッションとして再取得
+  - ダイアログ開閉時: キャッシュされたデータを再利用
