@@ -9,6 +9,14 @@
   },
   "rewrites": [
     {
+      "source": "/api/schedule.json",
+      "destination": "https://qnaiv.github.io/splatoon3-schedule-notificator/api/schedule.json"
+    },
+    {
+      "source": "/data/(.*)",
+      "destination": "https://qnaiv.github.io/splatoon3-schedule-notificator/data/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

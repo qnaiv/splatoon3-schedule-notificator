@@ -137,9 +137,9 @@ export async function loadEventTypes(): Promise<string[]> {
   }
 
   try {
-    // 本番環境ではGitHub Pagesから取得、開発環境はローカル
+    // 本番環境ではVercelプロキシを使用、開発環境はローカル
     const baseUrl = import.meta.env.PROD
-      ? 'https://qnaiv.github.io/splatoon3-schedule-notificator'
+      ? '' // Vercelのrewriteプロキシを使用
       : '';
     const response = await fetch(`${baseUrl}/data/event-types.txt`);
     if (!response.ok) {
@@ -174,9 +174,9 @@ export async function loadStageTypes(): Promise<string[]> {
   }
 
   try {
-    // 本番環境ではGitHub Pagesから取得、開発環境はローカル
+    // 本番環境ではVercelプロキシを使用、開発環境はローカル
     const baseUrl = import.meta.env.PROD
-      ? 'https://qnaiv.github.io/splatoon3-schedule-notificator'
+      ? '' // Vercelのrewriteプロキシを使用
       : '';
     const response = await fetch(`${baseUrl}/data/stage-types.txt`);
     if (!response.ok) {
