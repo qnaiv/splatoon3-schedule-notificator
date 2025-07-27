@@ -119,3 +119,49 @@ export function assertNotNull<T>(
 export function safeAccess<T>(value: T | null | undefined, fallback: T): T {
   return value != null ? value : fallback;
 }
+
+/**
+ * テキストファイルからイベントタイプリストを読み込み
+ *
+ * @returns イベントタイプの配列
+ */
+export async function loadEventTypes(): Promise<string[]> {
+  try {
+    const response = await fetch('/data/event-types.txt');
+    if (!response.ok) {
+      throw new Error(`Failed to load event types: ${response.status}`);
+    }
+    const text = await response.text();
+    return text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+  } catch (error) {
+    console.error('Failed to load event types from file:', error);
+    // フォールバックとして空配列を返す
+    return [];
+  }
+}
+
+/**
+ * テキストファイルからステージタイプリストを読み込み
+ *
+ * @returns ステージタイプの配列
+ */
+export async function loadStageTypes(): Promise<string[]> {
+  try {
+    const response = await fetch('/data/stage-types.txt');
+    if (!response.ok) {
+      throw new Error(`Failed to load stage types: ${response.status}`);
+    }
+    const text = await response.text();
+    return text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+  } catch (error) {
+    console.error('Failed to load stage types from file:', error);
+    // フォールバックとして空配列を返す
+    return [];
+  }
+}
