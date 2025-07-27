@@ -137,7 +137,11 @@ export async function loadEventTypes(): Promise<string[]> {
   }
 
   try {
-    const response = await fetch('/data/event-types.txt');
+    // 本番環境ではGitHub Pagesから取得、開発環境はローカル
+    const baseUrl = import.meta.env.PROD
+      ? 'https://qnaiv.github.io/splatoon3-schedule-notificator'
+      : '';
+    const response = await fetch(`${baseUrl}/data/event-types.txt`);
     if (!response.ok) {
       throw new Error(`Failed to load event types: ${response.status}`);
     }
@@ -170,7 +174,11 @@ export async function loadStageTypes(): Promise<string[]> {
   }
 
   try {
-    const response = await fetch('/data/stage-types.txt');
+    // 本番環境ではGitHub Pagesから取得、開発環境はローカル
+    const baseUrl = import.meta.env.PROD
+      ? 'https://qnaiv.github.io/splatoon3-schedule-notificator'
+      : '';
+    const response = await fetch(`${baseUrl}/data/stage-types.txt`);
     if (!response.ok) {
       throw new Error(`Failed to load stage types: ${response.status}`);
     }
