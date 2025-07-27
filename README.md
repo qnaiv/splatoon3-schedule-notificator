@@ -28,6 +28,7 @@
 
 ### インフラ
 - **GitHub Pages** (WebUIホスティング)
+- **Vercel** (WebUIプレビュー環境)
 - **GitHub Actions** (自動デプロイ・データ取得)
 - **Spla3 API** (データソース)
 
@@ -77,6 +78,27 @@ http://localhost:3000 でWebUIが起動します。
    // WebUIのAPIエンドポイントを更新
    // src/hooks/useSchedule.ts内のAPIベースURL
    ```
+
+### 5. Vercelプレビュー環境のセットアップ (オプション)
+
+PRレビュー時にWebUIプレビューを確認するためのセットアップ:
+
+1. **Vercelアカウント作成**
+   - [Vercel](https://vercel.com) でアカウント作成
+
+2. **GitHubリポジトリ連携**
+   - Vercelダッシュボードで "Import Project"
+   - GitHubからこのリポジトリを選択
+
+3. **プロジェクト設定**
+   - Framework: `Vite`
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+   - Root Directory: `/`
+
+4. **自動プレビュー**
+   - PR作成時に自動でプレビューURLが生成されます
+   - PRのコメント欄にプレビューリンクが表示されます
 
 ## 📋 使用方法
 
@@ -138,6 +160,7 @@ splatoon3-schedule-notificator/
 ├── .github/workflows/
 │   ├── deploy.yml               # WebUI自動デプロイ
 │   └── update-schedule.yml      # スケジュール自動更新
+├── vercel.json                  # Vercelデプロイ設定
 └── public/api/                  # APIデータ
 ```
 
