@@ -6,10 +6,14 @@ const API_CONFIG = {
   baseUrl:
     import.meta.env.VITE_API_BASE_URL ||
     (import.meta.env.PROD
-      ? '' // Vercelのrewriteプロキシを使用
+      ? '' // GitHub Pagesでは相対パスを使用
       : 'http://localhost:3000'),
-  scheduleEndpoint: '/api/schedule.json',
-  currentEndpoint: '/api/current.json',
+  scheduleEndpoint: import.meta.env.PROD
+    ? './api/schedule.json'
+    : '/api/schedule.json',
+  currentEndpoint: import.meta.env.PROD
+    ? './api/current.json'
+    : '/api/current.json',
 };
 
 export const useSchedule = () => {
