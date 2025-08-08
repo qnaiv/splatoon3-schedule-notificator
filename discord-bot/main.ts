@@ -1,6 +1,5 @@
 import {
   BotSettings,
-  UserSettings,
   NotificationCondition,
   DiscordInteraction,
   Embed,
@@ -8,16 +7,6 @@ import {
   ApiMatch,
   Stage,
 } from './types.ts';
-import {
-  fetchScheduleData,
-  getAllMatches,
-  getMatchesForNotification,
-} from './schedule.ts';
-import {
-  checkNotificationConditions,
-  createNotificationMessage,
-  shouldNotify,
-} from './notifications.ts';
 import { KVNotificationManager } from './kv-notification-manager.ts';
 import { NotificationChecker } from './notification-checker.ts';
 
@@ -608,7 +597,7 @@ async function handleSlashCommand(
           }
 
           // 即座に通知チェックを実行
-          manualNotificationCheck(settings, channelId);
+          await manualNotificationCheck(settings, channelId);
 
           return new Response(
             JSON.stringify({
@@ -671,7 +660,7 @@ async function handleSlashCommand(
   }
 }
 
-// 手動通知チェック（時間条件無視）
+// 手動通知チェック（現在開催中のマッチのみ）
 async function manualNotificationCheck(settings: any, channelId: string) {
   console.log(`🔄 手動通知チェック開始: ユーザー ${settings.userId}`);
 
@@ -686,26 +675,11 @@ async function manualNotificationCheck(settings: any, channelId: string) {
     }
 
     const scheduleData = await response.json();
-    console.log('✅ スケジュールデータ取得成功', {
-      lastUpdated: scheduleData.lastUpdated,
-      hasRegular: !!scheduleData.data.result.regular,
-      hasX: !!scheduleData.data.result.x,
-      hasBankara: !!scheduleData.data.result.bankara_challenge,
-    });
 
     if (!settings) {
       console.log('❌ ユーザー設定が見つかりません');
       return;
     }
-
-    console.log('👤 ユーザー設定確認', {
-      userId: settings.userId,
-      conditionsCount: settings.conditions.length,
-      conditions: settings.conditions.map((c) => ({
-        name: c.name,
-        enabled: c.enabled,
-      })),
-    });
 
     // 全マッチタイプのスケジュールを取得
     const allMatches: ScheduleMatch[] = [
@@ -726,17 +700,8 @@ async function manualNotificationCheck(settings: any, channelId: string) {
       })),
     ];
 
-    console.log('🎮 全マッチ確認', {
-      totalMatches: allMatches.length,
-      regularCount: scheduleData.data.result.regular?.length || 0,
-      xCount: scheduleData.data.result.x?.length || 0,
-      bankaraChallenge: scheduleData.data.result.bankara_challenge?.length || 0,
-      bankaraOpen: scheduleData.data.result.bankara_open?.length || 0,
-    });
-
     let notificationsSent = 0;
     const now = new Date();
-    console.log('⏰ 現在時刻:', now.toISOString());
 
     for (const condition of settings.conditions) {
       // 現在開催中のマッチを対象
@@ -746,44 +711,13 @@ async function manualNotificationCheck(settings: any, channelId: string) {
         return startTime <= now && now < endTime;
       });
 
-      console.log(`🕐 現在開催中マッチ - 条件 "${condition.name}"`, {
-        totalMatches: allMatches.length,
-        currentMatches: currentMatches.length,
-        currentTime: now.toISOString(),
-        firstMatch: allMatches[0]?.start_time,
-        lastMatch: allMatches[allMatches.length - 1]?.start_time,
-        sampleCurrentMatch: currentMatches[0]
-          ? {
-              start: currentMatches[0].start_time,
-              end: currentMatches[0].end_time,
-              rule: currentMatches[0].rule.name,
-              type: currentMatches[0].match_type,
-            }
-          : null,
-      });
-
-      // ルール・ステージ・マッチタイプの条件のみチェック
-      console.log(`🔍 条件チェック開始: "${condition.name}"`);
-      console.log(`  - ルール条件: [${(condition.rules || []).join(', ')}]`);
-      console.log(
-        `  - マッチタイプ条件: [${(condition.matchTypes || []).join(', ')}]`
-      );
-      console.log(`  - ステージ条件: [${(condition.stages || []).join(', ')}]`);
-
       const matchingMatches = currentMatches.filter((match) => {
-        console.log(
-          `📝 マッチチェック: ${match.rule.name} / ${match.match_type}`
-        );
-
         // ルール条件チェック
         if (
           condition.rules &&
           condition.rules.length > 0 &&
           !condition.rules.includes(match.rule.name)
         ) {
-          console.log(
-            `  ❌ ルール不一致: ${match.rule.name} not in [${condition.rules.join(', ')}]`
-          );
           return false;
         }
 
@@ -793,9 +727,6 @@ async function manualNotificationCheck(settings: any, channelId: string) {
           condition.matchTypes.length > 0 &&
           !condition.matchTypes.includes(match.match_type)
         ) {
-          console.log(
-            `  ❌ マッチタイプ不一致: ${match.match_type} not in [${condition.matchTypes.join(', ')}]`
-          );
           return false;
         }
 
@@ -806,20 +737,12 @@ async function manualNotificationCheck(settings: any, channelId: string) {
             matchStageIds.includes(stageId)
           );
           if (!hasMatchingStage) {
-            console.log(
-              `  ❌ ステージ不一致: [${matchStageIds.join(', ')}] not in [${condition.stages.join(', ')}]`
-            );
             return false;
           }
         }
 
-        console.log(`  ✅ 条件一致!`);
         return true;
       });
-
-      console.log(
-        `🔍 条件 "${condition.name}": ${matchingMatches.length}件のマッチ`
-      );
 
       // 最初の3件まで通知（スパム防止）
       for (const match of matchingMatches.slice(0, 3)) {
@@ -852,7 +775,7 @@ async function manualNotificationCheck(settings: any, channelId: string) {
   }
 }
 
-// マッチ通知送信
+// マッチ通知送信（手動チェック用）
 async function sendMatchNotification(
   userSettings: any,
   condition: NotificationCondition,
@@ -930,6 +853,7 @@ async function sendMatchNotification(
   }
 }
 
+
 // シンプルメッセージ送信
 async function sendSimpleMessage(
   channelId: string,
@@ -1000,13 +924,6 @@ function formatSingleConditionWithNumber(
    ├ 最終通知: ${lastNotifiedText}
    └ 通知先: <#${channelId}>`;
 }
-
-
-
-
-
-
-
 
 // メイン処理
 async function main() {
