@@ -32,26 +32,29 @@ export class KVNotificationManager {
 
   private async retryOperation<T>(operation: () => Promise<T>): Promise<T> {
     let lastError: Error;
-    
+
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
         return await operation();
       } catch (error) {
         lastError = error as Error;
-        console.error(`❌ KV操作失敗 (試行 ${attempt}/${this.maxRetries}):`, error);
-        
+        console.error(
+          `❌ KV操作失敗 (試行 ${attempt}/${this.maxRetries}):`,
+          error
+        );
+
         if (attempt < this.maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         }
       }
     }
-    
+
     throw lastError!;
   }
 
   async saveUserSettings(
-    userId: string, 
-    guildId: string, 
+    userId: string,
+    guildId: string,
     conditions: NotificationCondition[],
     channelId: string
   ): Promise<string> {
@@ -63,9 +66,12 @@ export class KVNotificationManager {
     const key = this.getSettingsKey(userId, guildId);
 
     return await this.retryOperation(async () => {
-      // 既存設定を取得してcreatedAtを保持
+      // 既存設定を取得してcreatedAtとsettingIdを保持
       const existing = await this.kv!.get(key);
-      const createdAt = existing.value ? (existing.value as UserNotificationSettings).createdAt : now;
+      const existingSettings =
+        existing.value as UserNotificationSettings | null;
+      const createdAt = existingSettings?.createdAt ?? now;
+      const settingId = existingSettings?.settingId ?? crypto.randomUUID();
 
       const settings: UserNotificationSettings = {
         userId,
@@ -74,8 +80,8 @@ export class KVNotificationManager {
         conditions,
         createdAt,
         updatedAt: now,
-        settingId: crypto.randomUUID(),
-        version: '2.0'
+        settingId,
+        version: '2.0',
       };
 
       const result = await this.kv!.set(key, settings);
@@ -83,12 +89,17 @@ export class KVNotificationManager {
         throw new Error('KV set operation failed');
       }
 
-      console.log(`✅ Settings saved: ${userId}/${guildId} (${conditions.length} conditions)`);
+      console.log(
+        `✅ Settings saved: ${userId}/${guildId} (${conditions.length} conditions)`
+      );
       return settings.settingId;
     });
   }
 
-  async getUserSettings(userId: string, guildId: string): Promise<UserNotificationSettings | null> {
+  async getUserSettings(
+    userId: string,
+    guildId: string
+  ): Promise<UserNotificationSettings | null> {
     if (!this.kv) {
       throw new Error('KV not initialized');
     }
@@ -106,10 +117,10 @@ export class KVNotificationManager {
 
     return await this.retryOperation(async () => {
       const settings: UserNotificationSettings[] = [];
-      
+
       // notificationsプレフィックスで直接スキャン
       const iter = this.kv!.list({ prefix: ['notifications'] });
-      
+
       for await (const { value } of iter) {
         const userSettings = value as UserNotificationSettings;
         if (userSettings.conditions && userSettings.conditions.length > 0) {
@@ -129,7 +140,7 @@ export class KVNotificationManager {
     return await this.retryOperation(async () => {
       const key = this.getSettingsKey(userId, guildId);
       const existing = await this.kv!.get(key);
-      
+
       if (!existing.value) {
         console.log(`⚠️ Settings not found for deletion: ${userId}/${guildId}`);
         return false;
@@ -141,30 +152,51 @@ export class KVNotificationManager {
     });
   }
 
-  async updateLastNotified(userId: string, guildId: string, conditionName: string): Promise<boolean> {
+  async updateLastNotified(
+    userId: string,
+    guildId: string,
+    conditionName: string
+  ): Promise<boolean> {
     if (!this.kv) {
       throw new Error('KV not initialized');
     }
 
     return await this.retryOperation(async () => {
-      const settings = await this.getUserSettings(userId, guildId);
-      if (!settings) {
+      const key = this.getSettingsKey(userId, guildId);
+      const existing = await this.kv!.get(key);
+
+      if (!existing.value) {
         return false;
       }
 
+      const settings = existing.value as UserNotificationSettings;
+
       // 条件のlastNotifiedを更新
-      const updatedConditions = settings.conditions.map(condition => {
+      const updatedConditions = settings.conditions.map((condition) => {
         if (condition.name === conditionName) {
           return {
             ...condition,
-            lastNotified: new Date().toISOString()
+            lastNotified: new Date().toISOString(),
           };
         }
         return condition;
       });
 
-      // 設定を再保存
-      await this.saveUserSettings(userId, guildId, updatedConditions, settings.channelId);
+      // settingIdとcreatedAtを保持し、updatedAtのみ更新
+      const updatedSettings: UserNotificationSettings = {
+        ...settings,
+        conditions: updatedConditions,
+        updatedAt: Date.now(),
+      };
+
+      const result = await this.kv!.set(key, updatedSettings);
+      if (!result.ok) {
+        throw new Error('KV set operation failed');
+      }
+
+      console.log(
+        `✅ LastNotified updated: ${userId}/${guildId} - ${conditionName}`
+      );
       return true;
     });
   }
