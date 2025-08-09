@@ -56,6 +56,6 @@ jobs:
         uses: denoland/deployctl@v1
         with:
           project: "qnaiv-splatoon3-s-12"
-          entrypoint: "discord-bot/webhook.ts"
+          entrypoint: "discord-bot/main.ts"
           
           
