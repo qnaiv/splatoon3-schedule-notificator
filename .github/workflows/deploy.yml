@@ -3,6 +3,7 @@ on:
   push:
     branches: [main]
     paths: ['discord-bot/**']
+  workflow_dispatch:
 
 jobs:
   deploy:
