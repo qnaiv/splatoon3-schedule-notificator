@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plus,
   Settings,
@@ -18,6 +18,7 @@ import {
   EventType,
 } from '../types';
 import { convertUIToBotCondition } from '../types/shared';
+import { generateConditionName } from '../utils/conditionNameGenerator';
 import { encodeToBase64 } from '../utils';
 import { useSettings } from '../hooks/useSettings';
 import { useSchedule } from '../hooks/useSchedule';
@@ -487,6 +488,31 @@ const BasicMatchConditionEditor: React.FC<BasicMatchConditionEditorProps> = ({
     notifyMinutesBefore: condition?.notifyMinutesBefore || 10,
   }));
 
+  const [isNameManuallyEdited, setIsNameManuallyEdited] = useState(false);
+
+  // 新規作成時のみ条件変更に応じて条件名を自動生成
+  useEffect(() => {
+    if (!isNameManuallyEdited && !condition) {
+      // 新規作成時のみ
+      const autoName = generateConditionName({
+        rules: formData.rules.values,
+        matchTypes: formData.matchTypes.values,
+        stages: formData.stages.values.map((stageId) => {
+          const stage = allStages.find((s) => s.id === stageId);
+          return stage?.name || stageId;
+        }),
+      });
+      setFormData((prev) => ({ ...prev, name: autoName }));
+    }
+  }, [
+    formData.rules.values,
+    formData.matchTypes.values,
+    formData.stages.values,
+    isNameManuallyEdited,
+    condition,
+    allStages,
+  ]);
+
   const handleSave = () => {
     if (!formData.name.trim()) {
       alert('条件名を入力してください');
@@ -503,6 +529,11 @@ const BasicMatchConditionEditor: React.FC<BasicMatchConditionEditorProps> = ({
     }
 
     onSave(formData);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsNameManuallyEdited(true);
+    setFormData({ ...formData, name: e.target.value });
   };
 
   return (
@@ -530,9 +561,7 @@ const BasicMatchConditionEditor: React.FC<BasicMatchConditionEditorProps> = ({
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={handleNameChange}
                 className="w-full border rounded-lg px-3 py-2"
                 placeholder="例: ガチホコ＋お気に入りステージ"
               />
