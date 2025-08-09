@@ -144,3 +144,12 @@ REQUIREMENTS.md
 DISCORD_BOT_PLAN.md
 
 public/
+
+# Serena MCP files
+.serena/cache/
+.serena/logs/
+.serena/*.log
+
+# Keep memories and project config
+# .serena/memories/
+# .serena/project.yml
