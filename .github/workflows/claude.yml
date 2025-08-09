@@ -42,6 +42,20 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Setup GitHub CLI
+        run: |
+          # GitHub CLIがプリインストールされているかを確認
+          if ! command -v gh &> /dev/null; then
+            echo "📦 GitHub CLIをインストール中..."
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update && sudo apt install gh -y
+            echo "✅ GitHub CLIのインストールが完了しました"
+          else
+            echo "✅ GitHub CLIは既にインストール済みです"
+            gh --version
+          fi
+
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@beta
@@ -187,10 +201,16 @@ jobs:
             - `phase:implementation` - 実装中
             - `phase:completed` - 完了
             
-            ラベル設定にはGitHub CLIを使用：
+            ラベル設定にはGitHub CLIを使用（エラーハンドリング付き）：
             ```bash
             # 現在のラベルを削除して新しいフェーズラベルを設定
-            gh issue edit [issue-number] --remove-label "phase:requirements,phase:design,phase:design-review,phase:implementation" --add-label "phase:design"
+            # エラーハンドリングを含む安全な実行
+            if ! gh issue edit [issue-number] --remove-label "phase:requirements,phase:design,phase:design-review,phase:implementation" --add-label "phase:design" 2>/dev/null; then
+              echo "⚠️ フェーズラベルの設定に失敗しましたが、処理を継続します"
+              echo "   手動でラベルを確認してください: https://github.com/qnaiv/splatoon3-schedule-notificator/issues/[issue-number]"
+            else
+              echo "✅ フェーズラベルを更新しました: phase:design"
+            fi
             ```
             
             ### 重要な原則
