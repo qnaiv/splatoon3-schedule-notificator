@@ -8,6 +8,7 @@ import {
   Stage,
 } from './types.ts';
 import { KVNotificationManager } from './kv-notification-manager.ts';
+import { shouldCheckForNotification } from './notifications.ts';
 import { NotificationChecker } from './notification-checker.ts';
 
 // 環境変数の取得
@@ -186,7 +187,6 @@ async function handleRequest(request: Request): Promise<Response> {
     }
   }
 
-
   // GET リクエスト（接続テスト用）
   if (request.method === 'GET') {
     console.log('🔧 Debug: GET リクエスト受信 - 接続テスト');
@@ -241,7 +241,8 @@ async function handleSlashCommand(
             JSON.stringify({
               type: 4,
               data: {
-                content: '❌ システムが初期化されていません。しばらく後に再試行してください。',
+                content:
+                  '❌ システムが初期化されていません。しばらく後に再試行してください。',
                 flags: 64,
               },
             }),
@@ -265,8 +266,10 @@ async function handleSlashCommand(
           const settings: BotSettings = JSON.parse(decoded);
 
           // 有効な条件のみフィルタ
-          const enabledConditions = settings.conditions.filter((c) => c.enabled);
-          
+          const enabledConditions = settings.conditions.filter(
+            (c) => c.enabled
+          );
+
           // 即座にKVに保存
           const settingId = await kvManager.saveUserSettings(
             userId!,
@@ -275,7 +278,9 @@ async function handleSlashCommand(
             channelId
           );
 
-          console.log(`✅ Settings saved immediately: ${settingId} for user ${userId}`);
+          console.log(
+            `✅ Settings saved immediately: ${settingId} for user ${userId}`
+          );
 
           return new Response(
             JSON.stringify({
@@ -315,7 +320,8 @@ async function handleSlashCommand(
             JSON.stringify({
               type: 4,
               data: {
-                content: '❌ システムが初期化されていません。しばらく後に再試行してください。',
+                content:
+                  '❌ システムが初期化されていません。しばらく後に再試行してください。',
                 flags: 64,
               },
             }),
@@ -399,7 +405,8 @@ async function handleSlashCommand(
             JSON.stringify({
               type: 4,
               data: {
-                content: '❌ 設定の取得に失敗しました。しばらく後に再試行してください。',
+                content:
+                  '❌ 設定の取得に失敗しました。しばらく後に再試行してください。',
                 flags: 64,
               },
             }),
@@ -416,7 +423,8 @@ async function handleSlashCommand(
             JSON.stringify({
               type: 4,
               data: {
-                content: '❌ システムが初期化されていません。しばらく後に再試行してください。',
+                content:
+                  '❌ システムが初期化されていません。しばらく後に再試行してください。',
                 flags: 64,
               },
             }),
@@ -466,7 +474,8 @@ async function handleSlashCommand(
             JSON.stringify({
               type: 4,
               data: {
-                content: '❌ 設定の削除に失敗しました。しばらく後に再試行してください。',
+                content:
+                  '❌ 設定の削除に失敗しました。しばらく後に再試行してください。',
                 flags: 64,
               },
             }),
@@ -483,7 +492,8 @@ async function handleSlashCommand(
             JSON.stringify({
               type: 4,
               data: {
-                content: '❌ システムが初期化されていません。しばらく後に再試行してください。',
+                content:
+                  '❌ システムが初期化されていません。しばらく後に再試行してください。',
                 flags: 64,
               },
             }),
@@ -547,7 +557,8 @@ async function handleSlashCommand(
             JSON.stringify({
               type: 4,
               data: {
-                content: '❌ 設定の取得に失敗しました。しばらく後に再試行してください。',
+                content:
+                  '❌ 設定の取得に失敗しました。しばらく後に再試行してください。',
                 flags: 64,
               },
             }),
@@ -564,7 +575,8 @@ async function handleSlashCommand(
             JSON.stringify({
               type: 4,
               data: {
-                content: '❌ システムが初期化されていません。しばらく後に再試行してください。',
+                content:
+                  '❌ システムが初期化されていません。しばらく後に再試行してください。',
                 flags: 64,
               },
             }),
@@ -618,7 +630,8 @@ async function handleSlashCommand(
             JSON.stringify({
               type: 4,
               data: {
-                content: '❌ 設定の取得に失敗しました。しばらく後に再試行してください。',
+                content:
+                  '❌ 設定の取得に失敗しました。しばらく後に再試行してください。',
                 flags: 64,
               },
             }),
@@ -704,12 +717,10 @@ async function manualNotificationCheck(settings: any, channelId: string) {
     const now = new Date();
 
     for (const condition of settings.conditions) {
-      // 現在開催中のマッチを対象
-      const currentMatches = allMatches.filter((match) => {
-        const startTime = new Date(match.start_time);
-        const endTime = new Date(match.end_time);
-        return startTime <= now && now < endTime;
-      });
+      // 統一判定ロジックで通知対象のマッチを取得
+      const currentMatches = allMatches.filter((match) =>
+        shouldCheckForNotification(match, condition.notifyMinutesBefore, now)
+      );
 
       const matchingMatches = currentMatches.filter((match) => {
         // ルール条件チェック
@@ -852,7 +863,6 @@ async function sendMatchNotification(
     return false;
   }
 }
-
 
 // シンプルメッセージ送信
 async function sendSimpleMessage(
