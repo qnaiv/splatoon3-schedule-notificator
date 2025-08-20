@@ -1,7 +1,13 @@
-import { KVNotificationManager, UserNotificationSettings } from './kv-notification-manager.ts';
-import { ScheduleMatch, EventMatch, NotificationCondition } from './types.ts';
-import { getAllMatches } from './schedule.ts';
-import { checkNotificationConditions, shouldNotify } from './notifications.ts';
+import {
+  KVNotificationManager,
+  UserNotificationSettings,
+} from './kv-notification-manager.ts';
+import { ScheduleMatch, NotificationCondition } from './types.ts';
+import {
+  checkNotificationConditions,
+  shouldNotify,
+  shouldCheckForNotification,
+} from './notifications.ts';
 
 export class NotificationChecker {
   private kvManager: KVNotificationManager;
@@ -25,7 +31,7 @@ export class NotificationChecker {
 
     this.isRunning = true;
     console.log('🚀 NotificationChecker started');
-    
+
     // 無限ループで通知チェック
     this.startNotificationLoop();
   }
@@ -49,12 +55,12 @@ export class NotificationChecker {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private async getScheduleData(): Promise<any> {
     const now = Date.now();
-    
+
     // キャッシュが有効な場合は再利用
     if (this.scheduleCache && now < this.scheduleCacheExpiry) {
       return this.scheduleCache;
@@ -65,24 +71,24 @@ export class NotificationChecker {
       const response = await fetch(
         'https://qnaiv.github.io/splatoon3-schedule-notificator/api/schedule.json'
       );
-      
+
       if (!response.ok) {
         throw new Error(`Schedule fetch failed: ${response.status}`);
       }
 
       const scheduleData = await response.json();
-      
+
       // キャッシュを更新
       this.scheduleCache = scheduleData;
       this.scheduleCacheExpiry = now + this.scheduleCacheTimeout;
-      
+
       console.log('✅ スケジュールデータ取得成功', {
         lastUpdated: scheduleData.lastUpdated,
         hasRegular: !!scheduleData.data?.result?.regular,
         hasX: !!scheduleData.data?.result?.x,
         hasBankara: !!scheduleData.data?.result?.bankara_challenge,
       });
-      
+
       return scheduleData;
     } catch (error) {
       console.error('❌ スケジュールデータ取得失敗:', error);
@@ -119,12 +125,15 @@ export class NotificationChecker {
       for (const userSettings of allSettings) {
         try {
           const notifications = await this.checkUserNotifications(
-            userSettings, 
+            userSettings,
             allMatches
           );
           totalNotificationsSent += notifications;
         } catch (error) {
-          console.error(`❌ User notification check failed for ${userSettings.userId}:`, error);
+          console.error(
+            `❌ User notification check failed for ${userSettings.userId}:`,
+            error
+          );
         }
       }
 
@@ -179,7 +188,10 @@ export class NotificationChecker {
         );
 
         // 条件に合致するマッチをフィルタ
-        const matchingMatches = checkNotificationConditions(targetMatches, condition);
+        const matchingMatches = checkNotificationConditions(
+          targetMatches,
+          condition
+        );
 
         for (const match of matchingMatches) {
           if (shouldNotify(match, condition)) {
@@ -197,12 +209,17 @@ export class NotificationChecker {
                 condition.name
               );
               notificationsSent++;
-              console.log(`✅ Notification sent to user ${userSettings.userId} for condition "${condition.name}"`);
+              console.log(
+                `✅ Notification sent to user ${userSettings.userId} for condition "${condition.name}"`
+              );
             }
           }
         }
       } catch (error) {
-        console.error(`❌ Error checking condition "${condition.name}" for user ${userSettings.userId}:`, error);
+        console.error(
+          `❌ Error checking condition "${condition.name}" for user ${userSettings.userId}:`,
+          error
+        );
       }
     }
 
@@ -215,14 +232,9 @@ export class NotificationChecker {
   ): ScheduleMatch[] {
     const now = new Date();
 
-    return matches.filter((match) => {
-      const startTime = new Date(match.start_time);
-      const notifyTime = new Date(startTime.getTime() - notifyMinutesBefore * 60 * 1000);
-
-      // 通知時刻から±10分以内のマッチを対象（5分間隔チェックに対応）
-      const timeDiff = Math.abs(now.getTime() - notifyTime.getTime());
-      return timeDiff <= 10 * 60 * 1000; // 10分の誤差許容
-    });
+    return matches.filter((match) =>
+      shouldCheckForNotification(match, notifyMinutesBefore, now)
+    );
   }
 
   private async sendDiscordNotification(

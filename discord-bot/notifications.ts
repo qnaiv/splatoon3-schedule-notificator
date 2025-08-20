@@ -148,6 +148,21 @@ export function createNotificationMessage(
   };
 }
 
+export function shouldCheckForNotification(
+  match: ScheduleMatch | EventMatch,
+  notifyMinutesBefore: number,
+  currentTime: Date = new Date()
+): boolean {
+  const startTime = new Date(match.start_time);
+  const endTime = new Date(match.end_time);
+  const notifyTime = new Date(
+    startTime.getTime() - notifyMinutesBefore * 60 * 1000
+  );
+
+  // 条件: 通知時刻 ≤ 現在時刻 < 終了時刻
+  return notifyTime <= currentTime && currentTime < endTime;
+}
+
 export function shouldNotify(
   match: ScheduleMatch | EventMatch,
   condition: NotificationCondition
