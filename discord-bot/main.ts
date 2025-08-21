@@ -717,10 +717,20 @@ async function manualNotificationCheck(settings: any, channelId: string) {
     const now = new Date();
 
     for (const condition of settings.conditions) {
+      console.log(`🔍 条件チェック開始: "${condition.name}"`);
+      console.log(`  通知タイミング: ${condition.notifyMinutesBefore}分前`);
+      console.log(`  ルール条件: ${condition.rules?.join(', ') || '制限なし'}`);
+      console.log(`  マッチタイプ条件: ${condition.matchTypes?.join(', ') || '制限なし'}`);
+      
       // 統一判定ロジックで通知対象のマッチを取得
       const currentMatches = allMatches.filter((match) =>
         shouldCheckForNotification(match, condition.notifyMinutesBefore, now)
       );
+      
+      console.log(`  時刻フィルタ後のマッチ数: ${currentMatches.length}`);
+      currentMatches.forEach((match, index) => {
+        console.log(`    ${index + 1}. ${match.rule.name} (${match.match_type}) ${new Date(match.start_time).toLocaleString('ja-JP', {timeZone: 'Asia/Tokyo'})}-${new Date(match.end_time).toLocaleString('ja-JP', {timeZone: 'Asia/Tokyo'})}`);
+      });
 
       const matchingMatches = currentMatches.filter((match) => {
         // ルール条件チェック
@@ -753,6 +763,11 @@ async function manualNotificationCheck(settings: any, channelId: string) {
         }
 
         return true;
+      });
+
+      console.log(`  条件フィルタ後のマッチ数: ${matchingMatches.length}`);
+      matchingMatches.forEach((match, index) => {
+        console.log(`    ${index + 1}. ✅ ${match.rule.name} (${match.match_type})`);
       });
 
       // 最初の3件まで通知（スパム防止）

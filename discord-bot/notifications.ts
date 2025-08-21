@@ -163,26 +163,12 @@ export function shouldCheckForNotification(
   return notifyTime <= currentTime && currentTime < endTime;
 }
 
-export function shouldNotify(
-  match: ScheduleMatch | EventMatch,
+export function checkDuplicateNotification(
   condition: NotificationCondition
 ): boolean {
-  const now = new Date();
-  const startTime = new Date(match.start_time);
-  const notifyTime = new Date(
-    startTime.getTime() - condition.notifyMinutesBefore * 60 * 1000
-  );
-
-  // 通知時刻から±10分以内かチェック（10分間隔チェックに対応）
-  const timeDiff = Math.abs(now.getTime() - notifyTime.getTime());
-  const isTimeToNotify = timeDiff <= 10 * 60 * 1000; // 10分の誤差許容
-
-  if (!isTimeToNotify) {
-    return false;
-  }
-
   // この条件で既に通知済みかチェック
   if (condition.lastNotified) {
+    const now = new Date();
     const lastNotifiedTime = new Date(condition.lastNotified);
     const timeSinceLastNotification =
       now.getTime() - lastNotifiedTime.getTime();
@@ -193,9 +179,9 @@ export function shouldNotify(
     const minInterval = Math.max(notificationInterval, 60 * 60 * 1000); // 最低1時間
 
     if (timeSinceLastNotification < minInterval) {
-      return false;
+      return false; // 重複通知のため送信しない
     }
   }
 
-  return true;
+  return true; // 重複ではないため送信可能
 }
