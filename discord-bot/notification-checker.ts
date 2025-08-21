@@ -5,7 +5,7 @@ import {
 import { ScheduleMatch, NotificationCondition } from './types.ts';
 import {
   checkNotificationConditions,
-  shouldNotify,
+  checkDuplicateNotification,
   shouldCheckForNotification,
 } from './notifications.ts';
 
@@ -194,7 +194,7 @@ export class NotificationChecker {
         );
 
         for (const match of matchingMatches) {
-          if (shouldNotify(match, condition)) {
+          if (checkDuplicateNotification(condition)) {
             const success = await this.sendDiscordNotification(
               userSettings,
               condition,
