@@ -13,7 +13,7 @@ export function checkNotificationConditions(
   condition: NotificationCondition
 ): ScheduleMatch[] {
   return matches.filter((match) => {
-    // ルール条件チェック
+    // ルール条件チェック（ルール名を正規化して比較）
     if (
       condition.rules &&
       condition.rules.length > 0 &&

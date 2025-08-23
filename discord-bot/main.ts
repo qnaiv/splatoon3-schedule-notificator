@@ -9,6 +9,7 @@ import {
 } from './types.ts';
 import { KVNotificationManager } from './kv-notification-manager.ts';
 import { shouldCheckForNotification } from './notifications.ts';
+
 import { NotificationChecker } from './notification-checker.ts';
 
 // 環境変数の取得
@@ -723,7 +724,7 @@ async function manualNotificationCheck(settings: any, channelId: string) {
       );
 
       const matchingMatches = currentMatches.filter((match) => {
-        // ルール条件チェック
+        // ルール条件チェック（ルール名を正規化して比較）
         if (
           condition.rules &&
           condition.rules.length > 0 &&
