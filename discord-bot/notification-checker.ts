@@ -15,7 +15,6 @@ export class NotificationChecker {
   private scheduleCache: any = null;
   private scheduleCacheExpiry = 0;
   private readonly scheduleCacheTimeout = 10 * 60 * 1000; // 10分キャッシュ
-  private readonly checkInterval = 5 * 60 * 1000; // 5分間隔
   private readonly discordToken: string;
 
   constructor(kvManager: KVNotificationManager, discordToken: string) {
@@ -30,32 +29,12 @@ export class NotificationChecker {
     }
 
     this.isRunning = true;
-    console.log('🚀 NotificationChecker started');
-
-    // 無限ループで通知チェック
-    this.startNotificationLoop();
+    console.log('🚀 NotificationChecker started (cron mode)');
   }
 
   stop(): void {
     this.isRunning = false;
     console.log('🛑 NotificationChecker stopped');
-  }
-
-  private async startNotificationLoop(): Promise<void> {
-    while (this.isRunning) {
-      try {
-        await this.checkNotifications();
-        await this.sleep(this.checkInterval);
-      } catch (error) {
-        console.error('❌ Notification check error:', error);
-        // エラー時は1分後にリトライ
-        await this.sleep(60 * 1000);
-      }
-    }
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private async getScheduleData(): Promise<any> {
@@ -96,7 +75,7 @@ export class NotificationChecker {
     }
   }
 
-  private async checkNotifications(): Promise<void> {
+  public async checkNotifications(): Promise<void> {
     console.log('🔄 定期通知チェック開始...');
 
     try {
