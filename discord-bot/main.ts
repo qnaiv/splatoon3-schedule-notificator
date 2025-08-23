@@ -954,6 +954,22 @@ async function main() {
     await notificationChecker.start();
     console.log('✅ NotificationChecker起動完了');
 
+    // 定期通知チェック（5分間隔）
+    Deno.cron('notification-check', '*/5 * * * *', async () => {
+      console.log('🕐 Cron notification check started');
+      if (notificationChecker) {
+        try {
+          await notificationChecker.checkNotifications();
+          console.log('✅ Cron notification check completed');
+        } catch (error) {
+          console.error('❌ Cron notification check failed:', error);
+        }
+      } else {
+        console.error('❌ NotificationChecker not initialized');
+      }
+    });
+    console.log('✅ Cron job registered (*/5 * * * *)');
+
     await registerCommands();
     console.log('✅ コマンド登録完了');
 
@@ -970,6 +986,5 @@ async function main() {
   }
 }
 
-if (import.meta.main) {
-  main().catch(console.error);
-}
+// メイン処理開始
+main().catch(console.error);

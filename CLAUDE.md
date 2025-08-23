@@ -28,7 +28,7 @@ Splatoon3スケジュール通知システム - スプラトゥーン3の対戦�
 
 ### Discord Bot
 - **実行環境**: Deno Deploy
-- **通知チェック**: 30分ごと `Deno.cron("notification-check", "*/30 * * * *", checkNotifications)`
+- **通知チェック**: 5分ごと `Deno.cron("notification-check", "*/5 * * * *", checkNotifications)`
 - **データソース**: GitHub PagesのJSONエンドポイントから取得
 - **主要ファイル**: 
   - `discord-bot/main.ts` - メインbot処理
@@ -133,7 +133,7 @@ FORCE_UPDATE=true node fetch-schedule.js
 1. **自動生成ファイルは編集禁止** - `public/api/`内のファイルはGitHub Actionsで上書きされる
 2. **ローカルテスト必須** - スケジュール取得ロジックの変更前は必ずローカルでテスト
 3. **GitHub Actionsログ** - スケジュール更新問題のデバッグでは主にここを確認
-4. **Discord botの許容誤差** - cronの実行間隔を考慮して通知タイミングに10分の許容誤差あり
+4. **Discord botの許容誤差** - cronの実行間隔を考慮して通知タイミングに5分の許容誤差あり
 5. **API制限** - 外部スプラトゥーン3 APIに負荷をかけないため、2時間間隔で更新
 
 ## 最近解決した問題
