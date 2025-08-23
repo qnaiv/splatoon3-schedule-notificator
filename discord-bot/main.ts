@@ -10,15 +10,6 @@ import {
 import { KVNotificationManager } from './kv-notification-manager.ts';
 import { shouldCheckForNotification } from './notifications.ts';
 
-// ルール名正規化マッピング（APIデータ名 -> WebUI設定名）
-const RULE_NAME_MAPPING: Record<string, string> = {
-  ガチホコバトル: 'ガチホコ',
-};
-
-// ルール名を正規化する関数
-function normalizeRuleName(ruleName: string): string {
-  return RULE_NAME_MAPPING[ruleName] || ruleName;
-}
 import { NotificationChecker } from './notification-checker.ts';
 
 // 環境変数の取得
@@ -737,7 +728,7 @@ async function manualNotificationCheck(settings: any, channelId: string) {
         if (
           condition.rules &&
           condition.rules.length > 0 &&
-          !condition.rules.includes(normalizeRuleName(match.rule.name))
+          !condition.rules.includes(match.rule.name)
         ) {
           return false;
         }

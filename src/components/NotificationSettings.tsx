@@ -563,7 +563,7 @@ const BasicMatchConditionEditor: React.FC<BasicMatchConditionEditorProps> = ({
                 value={formData.name}
                 onChange={handleNameChange}
                 className="w-full border rounded-lg px-3 py-2"
-                placeholder="例: ガチホコ＋お気に入りステージ"
+                placeholder="例: ガチホコバトル＋お気に入りステージ"
               />
             </div>
 

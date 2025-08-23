@@ -90,7 +90,7 @@ export interface NotificationCondition {
 
 // ゲームルール
 export type GameRule =
-  | 'ガチホコ'
+  | 'ガチホコバトル'
   | 'ガチヤグラ'
   | 'ガチエリア'
   | 'ガチアサリ'
@@ -155,7 +155,7 @@ export const GAME_RULES: GameRule[] = [
   'ナワバリバトル',
   'ガチエリア',
   'ガチヤグラ',
-  'ガチホコ',
+  'ガチホコバトル',
   'ガチアサリ',
 ];
 
