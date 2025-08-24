@@ -211,7 +211,7 @@ const NotificationSettings: React.FC = () => {
               <strong>⚠️ 通知タイミングについて：</strong>
               <br />
               Discord
-              Botは5分間隔で自動チェックを行うため、設定した時刻から±10分程度の誤差が発生する場合があります。
+              Botは5分間隔で自動チェックを行うため、設定した時刻から±5分程度の誤差が発生する場合があります。
               <br />
               即座に確認したい場合は、Discordで{' '}
               <code className="bg-yellow-100 px-1 rounded">/check</code>{' '}
