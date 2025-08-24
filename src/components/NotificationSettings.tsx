@@ -172,8 +172,12 @@ const NotificationSettings: React.FC = () => {
           <Bell className="w-5 h-5 text-indigo-600" />
           <h3 className="font-medium text-indigo-800">Discord通知について</h3>
         </div>
+        <p className="text-indigo-700 text-sm">
+          このアプリで設定した条件をDiscord
+          Botに登録すると、指定した条件に基づいて通知を受け取ることができます。
+        </p>
         <p className="text-indigo-700 text-sm mb-3">
-          このアプリで設定した条件をDiscord Botで使用できます。
+          通知は、通知条件登録を実行したチャンネルに送信されます。
         </p>
 
         {/* Bot追加ボタン */}
@@ -207,7 +211,7 @@ const NotificationSettings: React.FC = () => {
               <strong>⚠️ 通知タイミングについて：</strong>
               <br />
               Discord
-              Botは10分間隔で自動チェックを行うため、設定した時刻から±10分程度の誤差が発生する場合があります。
+              Botは5分間隔で自動チェックを行うため、設定した時刻から±10分程度の誤差が発生する場合があります。
               <br />
               即座に確認したい場合は、Discordで{' '}
               <code className="bg-yellow-100 px-1 rounded">/check</code>{' '}
