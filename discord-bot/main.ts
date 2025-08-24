@@ -9,6 +9,7 @@ import {
 } from './types.ts';
 import { KVNotificationManager } from './kv-notification-manager.ts';
 import { shouldCheckForNotification } from './notifications.ts';
+import { getVersionFooterText } from './version.ts';
 
 import { NotificationChecker } from './notification-checker.ts';
 
@@ -534,7 +535,7 @@ async function handleSlashCommand(
             color: 0x00ff88,
             timestamp: new Date().toISOString(),
             footer: {
-              text: 'Splatoon3 Schedule Bot',
+              text: getVersionFooterText(),
             },
           };
 
@@ -833,7 +834,7 @@ async function sendMatchNotification(
       color: 0x00ff88,
       timestamp: new Date().toISOString(),
       footer: {
-        text: 'Splatoon3 Schedule Bot',
+        text: getVersionFooterText(),
       },
     };
 
