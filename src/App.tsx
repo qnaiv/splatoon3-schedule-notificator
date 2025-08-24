@@ -8,32 +8,32 @@ import { useSettings } from './hooks/useSettings';
 import { ScheduleMatch } from './types';
 
 const App: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<'schedule' | 'events' | 'settings'>('schedule');
-  const { 
-    currentMatches, 
-    upcomingMatches, 
-    loading, 
-    error, 
+  const [currentTab, setCurrentTab] = useState<
+    'schedule' | 'events' | 'settings'
+  >('schedule');
+  const {
+    currentMatches,
+    upcomingMatches,
+    loading,
+    error,
     refreshData,
-    lastUpdated 
+    lastUpdated,
   } = useSchedule();
-  const { 
+  const {
     currentEvents,
     upcomingEvents,
     loading: eventLoading,
     error: eventError,
-    refreshData: refreshEventData
+    refreshData: refreshEventData,
   } = useEventMatches();
   const { settings } = useSettings();
 
-
-
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('ja-JP', { 
-      hour: '2-digit', 
+    return date.toLocaleTimeString('ja-JP', {
+      hour: '2-digit',
       minute: '2-digit',
-      timeZone: 'Asia/Tokyo'
+      timeZone: 'Asia/Tokyo',
     });
   };
 
@@ -43,7 +43,7 @@ const App: React.FC = () => {
       month: 'short',
       day: 'numeric',
       weekday: 'short',
-      timeZone: 'Asia/Tokyo'
+      timeZone: 'Asia/Tokyo',
     });
   };
 
@@ -58,18 +58,20 @@ const App: React.FC = () => {
                 <span className="text-white font-bold text-xl">🦑</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">スプラトゥーン3</h1>
+                <h1 className="text-xl font-bold text-gray-800">
+                  スプラトゥーン3
+                </h1>
                 <p className="text-sm text-gray-600">Discord通知</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               {lastUpdated && (
                 <div className="text-xs text-gray-500">
                   最終更新: {formatTime(lastUpdated)}
                 </div>
               )}
-              
+
               <button
                 onClick={() => {
                   refreshData();
@@ -78,7 +80,9 @@ const App: React.FC = () => {
                 disabled={loading || eventLoading}
                 className="p-2 text-gray-400 hover:text-blue-500 rounded-lg disabled:opacity-50"
               >
-                <RefreshCw className={`w-5 h-5 ${loading || eventLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`w-5 h-5 ${loading || eventLoading ? 'animate-spin' : ''}`}
+                />
               </button>
             </div>
           </div>
@@ -88,7 +92,7 @@ const App: React.FC = () => {
       {/* タブナビゲーション */}
       <nav className="bg-white/80 backdrop-blur-sm border-b border-white/30">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex space-x-8">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-8">
             <button
               onClick={() => setCurrentTab('schedule')}
               className={`relative flex items-center gap-2 py-4 px-3 font-semibold text-sm transition-all duration-300 ${
@@ -103,7 +107,7 @@ const App: React.FC = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
               )}
             </button>
-            
+
             <button
               onClick={() => setCurrentTab('events')}
               className={`relative flex items-center gap-2 py-4 px-3 font-semibold text-sm transition-all duration-300 ${
@@ -123,7 +127,7 @@ const App: React.FC = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
               )}
             </button>
-            
+
             <button
               onClick={() => setCurrentTab('settings')}
               className={`relative flex items-center gap-2 py-4 px-3 font-semibold text-sm transition-all duration-300 ${
@@ -134,11 +138,15 @@ const App: React.FC = () => {
             >
               <Settings className="w-5 h-5" />
               Discord設定
-              {settings?.notificationConditions && settings.notificationConditions.length > 0 && (
-                <span className="bg-gradient-to-r from-teal-400 to-cyan-500 text-white text-xs px-2.5 py-1 rounded-full shadow-md">
-                  {settings.notificationConditions.filter(c => c.enabled).length}
-                </span>
-              )}
+              {settings?.notificationConditions &&
+                settings.notificationConditions.length > 0 && (
+                  <span className="bg-gradient-to-r from-teal-400 to-cyan-500 text-white text-xs px-2.5 py-1 rounded-full shadow-md">
+                    {
+                      settings.notificationConditions.filter((c) => c.enabled)
+                        .length
+                    }
+                  </span>
+                )}
               {currentTab === 'settings' && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full"></div>
               )}
@@ -191,9 +199,8 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
   loading,
   error,
   formatTime,
-  formatDate
+  formatDate,
 }) => {
-
   const getCompactMatchTypeName = (matchType: string) => {
     if (matchType === 'レギュラーマッチ') return '🎯 ナワバリ';
     if (matchType === 'バンカラマッチ(チャレンジ)') return '⚔️ バンカラ(C)';
@@ -204,11 +211,11 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
 
   const getCompactRuleName = (ruleName: string) => {
     const ruleMap = {
-      'ナワバリバトル': 'ナワバリ',
-      'ガチエリア': 'エリア',
-      'ガチヤグラ': 'ヤグラ',
-      'ガチホコバトル': 'ホコ',
-      'ガチアサリ': 'アサリ'
+      ナワバリバトル: 'ナワバリ',
+      ガチエリア: 'エリア',
+      ガチヤグラ: 'ヤグラ',
+      ガチホコバトル: 'ホコ',
+      ガチアサリ: 'アサリ',
     };
     return ruleMap[ruleName as keyof typeof ruleMap] || ruleName;
   };
@@ -217,34 +224,42 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
     if (matchType === 'レギュラーマッチ') {
       return {
         name: '🎯 ナワバリ',
-        color: 'bg-gradient-to-r from-match-turf/20 to-splatoon-yellow/20 text-green-800 border-match-turf/30',
-        bgColor: 'bg-gradient-to-br from-match-turf/10 via-splatoon-yellow/5 to-green-50/50',
+        color:
+          'bg-gradient-to-r from-match-turf/20 to-splatoon-yellow/20 text-green-800 border-match-turf/30',
+        bgColor:
+          'bg-gradient-to-br from-match-turf/10 via-splatoon-yellow/5 to-green-50/50',
         borderColor: 'border-match-turf/20',
-        shadowColor: 'shadow-match-turf/10'
+        shadowColor: 'shadow-match-turf/10',
       };
     } else if (matchType === 'バンカラマッチ(チャレンジ)') {
       return {
         name: '⚔️ バンカラ(チャレンジ)',
-        color: 'bg-gradient-to-r from-match-bankara/20 to-splatoon-orange/20 text-red-800 border-match-bankara/30',
-        bgColor: 'bg-gradient-to-br from-match-bankara/10 via-splatoon-orange/5 to-red-50/50',
+        color:
+          'bg-gradient-to-r from-match-bankara/20 to-splatoon-orange/20 text-red-800 border-match-bankara/30',
+        bgColor:
+          'bg-gradient-to-br from-match-bankara/10 via-splatoon-orange/5 to-red-50/50',
         borderColor: 'border-match-bankara/20',
-        shadowColor: 'shadow-match-bankara/10'
+        shadowColor: 'shadow-match-bankara/10',
       };
     } else if (matchType === 'バンカラマッチ(オープン)') {
       return {
         name: '🛡️ バンカラ(オープン)',
-        color: 'bg-gradient-to-r from-splatoon-pink/20 to-match-bankara/20 text-pink-800 border-splatoon-pink/30',
-        bgColor: 'bg-gradient-to-br from-splatoon-pink/10 via-match-bankara/5 to-pink-50/50',
+        color:
+          'bg-gradient-to-r from-splatoon-pink/20 to-match-bankara/20 text-pink-800 border-splatoon-pink/30',
+        bgColor:
+          'bg-gradient-to-br from-splatoon-pink/10 via-match-bankara/5 to-pink-50/50',
         borderColor: 'border-splatoon-pink/20',
-        shadowColor: 'shadow-splatoon-pink/10'
+        shadowColor: 'shadow-splatoon-pink/10',
       };
     } else if (matchType === 'Xマッチ') {
       return {
         name: '✨ Xマッチ',
-        color: 'bg-gradient-to-r from-match-x/20 to-splatoon-cyan/20 text-teal-800 border-match-x/30',
-        bgColor: 'bg-gradient-to-br from-match-x/10 via-splatoon-cyan/5 to-teal-50/50',
+        color:
+          'bg-gradient-to-r from-match-x/20 to-splatoon-cyan/20 text-teal-800 border-match-x/30',
+        bgColor:
+          'bg-gradient-to-br from-match-x/10 via-splatoon-cyan/5 to-teal-50/50',
         borderColor: 'border-match-x/20',
-        shadowColor: 'shadow-match-x/10'
+        shadowColor: 'shadow-match-x/10',
       };
     }
     return {
@@ -252,30 +267,39 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
       color: 'bg-gray-100 text-gray-800 border-gray-200',
       bgColor: 'bg-gray-50',
       borderColor: 'border-gray-200',
-      shadowColor: 'shadow-gray/10'
+      shadowColor: 'shadow-gray/10',
     };
   };
 
   const groupMatchesByTime = (matches: ScheduleMatch[]) => {
-    const groups: { startTime: string; endTime: string; matches: ScheduleMatch[] }[] = [];
-    
+    const groups: {
+      startTime: string;
+      endTime: string;
+      matches: ScheduleMatch[];
+    }[] = [];
+
     for (const match of matches) {
-      const existingGroup = groups.find(group => 
-        group.startTime === match.start_time && group.endTime === match.end_time
+      const existingGroup = groups.find(
+        (group) =>
+          group.startTime === match.start_time &&
+          group.endTime === match.end_time
       );
-      
+
       if (existingGroup) {
         existingGroup.matches.push(match);
       } else {
         groups.push({
           startTime: match.start_time,
           endTime: match.end_time,
-          matches: [match]
+          matches: [match],
         });
       }
     }
-    
-    return groups.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+    return groups.sort(
+      (a, b) =>
+        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+    );
   };
   if (loading) {
     return (
@@ -296,14 +320,15 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
 
   return (
     <div className="space-y-8">
-
       {/* 現在開催中のマッチ */}
       <section>
         <div className="flex items-center gap-3 mb-5">
           <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg">
             <Users className="w-5 h-5 text-white" />
           </div>
-          <h2 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">現在開催中</h2>
+          <h2 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+            現在開催中
+          </h2>
         </div>
 
         {currentMatches.length === 0 ? (
@@ -315,63 +340,75 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {currentMatches.map((match, index) => {
                 const matchTypeInfo = getMatchTypeInfo(match.match_type || '');
-                const stageNames = match.stages.map(stage => stage.name).join(' / ');
-                
+                const stageNames = match.stages
+                  .map((stage) => stage.name)
+                  .join(' / ');
+
                 // ステージ背景画像の生成
-                const stageImages = match.stages.filter(stage => stage.image).map(stage => stage.image);
-                const backgroundStyle = stageImages.length >= 2 ? {} : stageImages.length === 1 ? {
-                  backgroundImage: `url('${stageImages[0]}')`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat'
-                } : {};
+                const stageImages = match.stages
+                  .filter((stage) => stage.image)
+                  .map((stage) => stage.image);
+                const backgroundStyle =
+                  stageImages.length >= 2
+                    ? {}
+                    : stageImages.length === 1
+                      ? {
+                          backgroundImage: `url('${stageImages[0]}')`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          backgroundRepeat: 'no-repeat',
+                        }
+                      : {};
 
                 return (
-                  <div 
-                    key={`current-${index}`} 
+                  <div
+                    key={`current-${index}`}
                     className={`rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer relative overflow-hidden ${stageImages.length > 0 ? '' : matchTypeInfo.bgColor}`}
                     style={backgroundStyle}
                   >
                     {/* 2つのステージの場合の背景 */}
                     {stageImages.length >= 2 && (
                       <>
-                        <div 
+                        <div
                           className="absolute inset-0 rounded-xl opacity-80"
                           style={{
                             backgroundImage: `url('${stageImages[0]}')`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                             backgroundRepeat: 'no-repeat',
-                            clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)'
+                            clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)',
                           }}
                         />
-                        <div 
+                        <div
                           className="absolute inset-0 rounded-xl opacity-80"
                           style={{
                             backgroundImage: `url('${stageImages[1]}')`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                             backgroundRepeat: 'no-repeat',
-                            clipPath: 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)'
+                            clipPath:
+                              'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)',
                           }}
                         />
                       </>
                     )}
-                    
+
                     {/* 可読性向上のための強化オーバーレイ */}
                     <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/50 to-white/40 backdrop-blur-xs rounded-xl"></div>
-                    
+
                     {/* コンテンツ */}
                     <div className="relative z-10">
                       <div className="flex items-center justify-between mb-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${matchTypeInfo.color} bg-white shadow-xl`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${matchTypeInfo.color} bg-white shadow-xl`}
+                        >
                           {getCompactMatchTypeName(match.match_type || '')}
                         </span>
                         <span className="bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse font-bold">
                           開催中
                         </span>
                       </div>
-                      
+
                       <div>
                         <div className="text-sm font-bold text-gray-900 truncate">
                           {getCompactRuleName(match.rule.name)}
@@ -398,7 +435,9 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
           <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
             <Calendar className="w-5 h-5 text-white" />
           </div>
-          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">今後の予定</h2>
+          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            今後の予定
+          </h2>
         </div>
 
         {upcomingMatches.length === 0 ? (
@@ -407,95 +446,117 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({
           </div>
         ) : (
           <div className="space-y-5">
-            {groupMatchesByTime(upcomingMatches.slice(0, 24)).map((timeGroup, groupIndex) => (
-              <div key={`time-group-${groupIndex}`} className="bg-white/30 backdrop-blur-sm border border-white/40 rounded-xl p-5 shadow-xl hover:shadow-2xl transition-all duration-300">
-                <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">
-                    {formatDate(timeGroup.startTime)}
-                  </h3>
-                  <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    {formatTime(timeGroup.startTime)} - {formatTime(timeGroup.endTime)}
+            {groupMatchesByTime(upcomingMatches.slice(0, 24)).map(
+              (timeGroup, groupIndex) => (
+                <div
+                  key={`time-group-${groupIndex}`}
+                  className="bg-white/30 backdrop-blur-sm border border-white/40 rounded-xl p-5 shadow-xl hover:shadow-2xl transition-all duration-300"
+                >
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">
+                      {formatDate(timeGroup.startTime)}
+                    </h3>
+                    <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      {formatTime(timeGroup.startTime)} -{' '}
+                      {formatTime(timeGroup.endTime)}
+                    </div>
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {timeGroup.matches.map((match, index) => {
-                    const matchTypeInfo = getMatchTypeInfo(match.match_type || '');
-                    const stageNames = match.stages.map(stage => stage.name).join(' / ');
-                    
-                    // ステージ背景画像の生成
-                    const stageImages = match.stages.filter(stage => stage.image).map(stage => stage.image);
-                    const backgroundStyle = stageImages.length >= 2 ? {} : stageImages.length === 1 ? {
-                      backgroundImage: `url('${stageImages[0]}')`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat'
-                    } : {};
 
-                    return (
-                      <div 
-                        key={`upcoming-${groupIndex}-${index}`} 
-                        className={`rounded-xl p-4 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer relative overflow-hidden ${stageImages.length > 0 ? '' : matchTypeInfo.bgColor}`}
-                        style={backgroundStyle}
-                      >
-                        {/* 2つのステージの場合の背景 */}
-                        {stageImages.length >= 2 && (
-                          <>
-                            <div 
-                              className="absolute inset-0 rounded-xl opacity-80"
-                              style={{
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {timeGroup.matches.map((match, index) => {
+                      const matchTypeInfo = getMatchTypeInfo(
+                        match.match_type || ''
+                      );
+                      const stageNames = match.stages
+                        .map((stage) => stage.name)
+                        .join(' / ');
+
+                      // ステージ背景画像の生成
+                      const stageImages = match.stages
+                        .filter((stage) => stage.image)
+                        .map((stage) => stage.image);
+                      const backgroundStyle =
+                        stageImages.length >= 2
+                          ? {}
+                          : stageImages.length === 1
+                            ? {
                                 backgroundImage: `url('${stageImages[0]}')`,
                                 backgroundSize: 'cover',
                                 backgroundPosition: 'center',
                                 backgroundRepeat: 'no-repeat',
-                                clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)'
-                              }}
-                            />
-                            <div 
-                              className="absolute inset-0 rounded-xl opacity-80"
-                              style={{
-                                backgroundImage: `url('${stageImages[1]}')`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                backgroundRepeat: 'no-repeat',
-                                clipPath: 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)'
-                              }}
-                            />
-                          </>
-                        )}
-                        
-                        {/* 可読性向上のための強化オーバーレイ */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/50 to-white/40 backdrop-blur-xs rounded-xl"></div>
-                        
-                        {/* コンテンツ */}
-                        <div className="relative z-10">
-                          <div className="mb-3">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${matchTypeInfo.color} bg-white shadow-xl`}>
-                              {getCompactMatchTypeName(match.match_type || '')}
-                            </span>
-                          </div>
-                          
-                          <div>
-                            <div className="text-sm font-bold text-gray-900 truncate">
-                              {getCompactRuleName(match.rule.name)}
+                              }
+                            : {};
+
+                      return (
+                        <div
+                          key={`upcoming-${groupIndex}-${index}`}
+                          className={`rounded-xl p-4 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer relative overflow-hidden ${stageImages.length > 0 ? '' : matchTypeInfo.bgColor}`}
+                          style={backgroundStyle}
+                        >
+                          {/* 2つのステージの場合の背景 */}
+                          {stageImages.length >= 2 && (
+                            <>
+                              <div
+                                className="absolute inset-0 rounded-xl opacity-80"
+                                style={{
+                                  backgroundImage: `url('${stageImages[0]}')`,
+                                  backgroundSize: 'cover',
+                                  backgroundPosition: 'center',
+                                  backgroundRepeat: 'no-repeat',
+                                  clipPath:
+                                    'polygon(0 0, 50% 0, 50% 100%, 0 100%)',
+                                }}
+                              />
+                              <div
+                                className="absolute inset-0 rounded-xl opacity-80"
+                                style={{
+                                  backgroundImage: `url('${stageImages[1]}')`,
+                                  backgroundSize: 'cover',
+                                  backgroundPosition: 'center',
+                                  backgroundRepeat: 'no-repeat',
+                                  clipPath:
+                                    'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)',
+                                }}
+                              />
+                            </>
+                          )}
+
+                          {/* 可読性向上のための強化オーバーレイ */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/50 to-white/40 backdrop-blur-xs rounded-xl"></div>
+
+                          {/* コンテンツ */}
+                          <div className="relative z-10">
+                            <div className="mb-3">
+                              <span
+                                className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${matchTypeInfo.color} bg-white shadow-xl`}
+                              >
+                                {getCompactMatchTypeName(
+                                  match.match_type || ''
+                                )}
+                              </span>
                             </div>
-                            <div className="text-xs text-gray-800 leading-relaxed font-bold">
-                              {stageNames}
+
+                            <div>
+                              <div className="text-sm font-bold text-gray-900 truncate">
+                                {getCompactRuleName(match.rule.name)}
+                              </div>
+                              <div className="text-xs text-gray-800 leading-relaxed font-bold">
+                                {stageNames}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         )}
       </section>
     </div>
   );
 };
-
 
 export default App;
