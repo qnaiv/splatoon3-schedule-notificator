@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
-import { NotificationCondition } from '../types';
+import {
+  NotificationCondition,
+  GAME_RULES,
+  MATCH_TYPES,
+  GameRule,
+  MatchType,
+} from '../types';
+import { generateConditionName } from '../utils/conditionNameGenerator';
 
 interface NotificationDialogProps {
   isOpen: boolean;
@@ -11,6 +18,64 @@ interface NotificationDialogProps {
   ) => void;
   onCancel: () => void;
 }
+
+// 条件選択セクションコンポーネント
+interface ConditionSectionProps {
+  title: string;
+  options: Array<{ id: string; name: string }>;
+  selectedValues: string[];
+  operator: 'AND' | 'OR';
+  onSelectionChange: (values: string[]) => void;
+  onOperatorChange: (operator: 'AND' | 'OR') => void;
+  isGrid?: boolean;
+}
+
+const ConditionSection: React.FC<ConditionSectionProps> = ({
+  title,
+  options,
+  selectedValues,
+  onSelectionChange,
+  isGrid = false,
+}) => {
+  const handleToggle = (id: string) => {
+    if (selectedValues.includes(id)) {
+      onSelectionChange(selectedValues.filter((v) => v !== id));
+    } else {
+      onSelectionChange([...selectedValues, id]);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center gap-4 mb-3">
+        <label className="text-sm font-medium">{title}</label>
+      </div>
+      <div
+        className={
+          isGrid
+            ? 'grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3'
+            : 'space-y-2'
+        }
+      >
+        {options.map((option) => (
+          <label key={option.id} className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={selectedValues.includes(option.id)}
+              onChange={() => handleToggle(option.id)}
+            />
+            <span className="text-sm">{option.name}</span>
+          </label>
+        ))}
+      </div>
+      {selectedValues.length > 0 && (
+        <p className="text-xs text-gray-500 mt-2">
+          {selectedValues.length}件選択中 (いずれかを含む)
+        </p>
+      )}
+    </div>
+  );
+};
 
 const NotificationDialog: React.FC<NotificationDialogProps> = ({
   isOpen,
@@ -35,6 +100,35 @@ const NotificationDialog: React.FC<NotificationDialogProps> = ({
     },
     notifyMinutesBefore: initialCondition?.notifyMinutesBefore || 10,
   }));
+
+  const [isNameManuallyEdited, setIsNameManuallyEdited] = useState(false);
+
+  // 初期データがある場合（スケジュールから作成時）のみ条件変更に応じて条件名を自動生成
+  useEffect(() => {
+    if (!isNameManuallyEdited && initialCondition) {
+      const autoName = generateConditionName({
+        rules: formData.rules.values,
+        matchTypes: formData.matchTypes.values,
+        stages: formData.stages.values.map((stageId) => {
+          const stage = allStages.find((s) => s.id === stageId);
+          return stage?.name || stageId;
+        }),
+      });
+      setFormData((prev) => ({ ...prev, name: autoName }));
+    }
+  }, [
+    formData.rules.values,
+    formData.matchTypes.values,
+    formData.stages.values,
+    isNameManuallyEdited,
+    initialCondition,
+    allStages,
+  ]);
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsNameManuallyEdited(true);
+    setFormData({ ...formData, name: e.target.value });
+  };
 
   const handleSave = () => {
     if (!formData.name.trim()) {
@@ -77,15 +171,15 @@ const NotificationDialog: React.FC<NotificationDialogProps> = ({
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={handleNameChange}
                 className="w-full border rounded-lg px-3 py-2"
                 placeholder="例: ガチホコバトル＋お気に入りステージ"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                スケジュールから自動で生成されました。必要に応じて変更してください。
-              </p>
+              {initialCondition && (
+                <p className="text-xs text-gray-500 mt-1">
+                  スケジュールから自動で生成されました。必要に応じて変更してください。
+                </p>
+              )}
             </div>
 
             {/* 通知タイミング */}
@@ -114,64 +208,77 @@ const NotificationDialog: React.FC<NotificationDialogProps> = ({
               </div>
             </div>
 
-            {/* 選択されている条件の表示 */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-medium text-blue-800 mb-3">
-                選択されている条件
-              </h3>
+            {/* ルール選択 */}
+            <ConditionSection
+              title="ルール"
+              options={GAME_RULES.map((rule) => ({
+                id: rule,
+                name: rule,
+              }))}
+              selectedValues={formData.rules.values}
+              operator={formData.rules.operator}
+              onSelectionChange={(values) =>
+                setFormData({
+                  ...formData,
+                  rules: {
+                    ...formData.rules,
+                    values: values as GameRule[],
+                  },
+                })
+              }
+              onOperatorChange={(operator) =>
+                setFormData({
+                  ...formData,
+                  rules: { ...formData.rules, operator },
+                })
+              }
+            />
 
-              {formData.rules.values.length > 0 && (
-                <div className="mb-2">
-                  <span className="text-sm font-medium text-blue-700">
-                    ルール:{' '}
-                  </span>
-                  <span className="text-sm text-blue-600">
-                    {formData.rules.values.join(', ')}
-                  </span>
-                </div>
-              )}
+            {/* マッチタイプ選択 */}
+            <ConditionSection
+              title="マッチタイプ"
+              options={MATCH_TYPES.filter(
+                (type) => type !== 'イベントマッチ'
+              ).map((type) => ({ id: type, name: type }))}
+              selectedValues={formData.matchTypes.values}
+              operator={formData.matchTypes.operator}
+              onSelectionChange={(values) =>
+                setFormData({
+                  ...formData,
+                  matchTypes: {
+                    ...formData.matchTypes,
+                    values: values as MatchType[],
+                  },
+                })
+              }
+              onOperatorChange={(operator) =>
+                setFormData({
+                  ...formData,
+                  matchTypes: { ...formData.matchTypes, operator },
+                })
+              }
+            />
 
-              {formData.matchTypes.values.length > 0 && (
-                <div className="mb-2">
-                  <span className="text-sm font-medium text-blue-700">
-                    マッチタイプ:{' '}
-                  </span>
-                  <span className="text-sm text-blue-600">
-                    {formData.matchTypes.values.join(', ')}
-                  </span>
-                </div>
-              )}
-
-              {formData.stages.values.length > 0 && (
-                <div className="mb-2">
-                  <span className="text-sm font-medium text-blue-700">
-                    ステージ:{' '}
-                  </span>
-                  <span className="text-sm text-blue-600">
-                    {formData.stages.values
-                      .map((stageId) => {
-                        const stage = allStages.find((s) => s.id === stageId);
-                        return stage?.name || stageId;
-                      })
-                      .join(', ')}
-                  </span>
-                </div>
-              )}
-
-              <div className="mt-3 text-xs text-blue-600">
-                この条件でスケジュールがマッチした場合、
-                {formData.notifyMinutesBefore}分前に通知されます。
-              </div>
-            </div>
-
-            {/* 条件を編集したい場合のメッセージ */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <p className="text-sm text-gray-600">
-                <strong>💡 条件を詳細に編集したい場合</strong>
-                <br />
-                この条件を保存した後、Discord設定タブで詳細な編集ができます。
-              </p>
-            </div>
+            {/* ステージ選択 */}
+            <ConditionSection
+              title="ステージ"
+              options={allStages}
+              selectedValues={formData.stages.values}
+              operator={formData.stages.operator}
+              onSelectionChange={(values) =>
+                setFormData({
+                  ...formData,
+                  stages: { ...formData.stages, values },
+                })
+              }
+              onOperatorChange={(operator) =>
+                setFormData({
+                  ...formData,
+                  stages: { ...formData.stages, operator },
+                })
+              }
+              isGrid={true}
+            />
           </div>
 
           {/* ボタン */}
@@ -187,7 +294,7 @@ const NotificationDialog: React.FC<NotificationDialogProps> = ({
               className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
             >
               <Save className="w-4 h-4" />
-              通知条件を保存
+              保存
             </button>
           </div>
         </div>
