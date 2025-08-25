@@ -45,10 +45,22 @@ const ConditionSection: React.FC<ConditionSectionProps> = ({
     }
   };
 
+  const handleClearAll = () => {
+    onSelectionChange([]);
+  };
+
   return (
     <div>
       <div className="flex items-center gap-4 mb-3">
         <label className="text-sm font-medium">{title}</label>
+        {selectedValues.length > 0 && (
+          <button
+            onClick={handleClearAll}
+            className="text-xs text-blue-500 hover:text-blue-700 underline"
+          >
+            全て外す
+          </button>
+        )}
       </div>
       <div
         className={
