@@ -103,6 +103,30 @@ const NotificationDialog: React.FC<NotificationDialogProps> = ({
 
   const [isNameManuallyEdited, setIsNameManuallyEdited] = useState(false);
 
+  // initialCondition が変更されたときにフォームデータを再初期化
+  useEffect(() => {
+    setFormData({
+      name: initialCondition?.name || '',
+      enabled: initialCondition?.enabled ?? true,
+      stages: initialCondition?.stages || {
+        operator: 'OR' as const,
+        values: [],
+      },
+      rules: initialCondition?.rules || { operator: 'OR' as const, values: [] },
+      matchTypes: initialCondition?.matchTypes || {
+        operator: 'OR' as const,
+        values: [],
+      },
+      eventMatches: initialCondition?.eventMatches || {
+        enabled: false,
+        eventTypes: { operator: 'OR' as const, values: [] },
+        eventStages: { operator: 'OR' as const, values: [] },
+      },
+      notifyMinutesBefore: initialCondition?.notifyMinutesBefore || 10,
+    });
+    setIsNameManuallyEdited(false);
+  }, [initialCondition]);
+
   // 初期データがある場合（スケジュールから作成時）のみ条件変更に応じて条件名を自動生成
   useEffect(() => {
     if (!isNameManuallyEdited && initialCondition) {
