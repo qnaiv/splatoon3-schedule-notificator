@@ -4,11 +4,16 @@ import {
   DiscordInteraction,
   Embed,
   ScheduleMatch,
+  EventMatch,
   ApiMatch,
   Stage,
 } from './types.ts';
 import { KVNotificationManager } from './kv-notification-manager.ts';
-import { shouldCheckForNotification } from './notifications.ts';
+import {
+  shouldCheckForNotification,
+  checkEventNotificationConditions,
+} from './notifications.ts';
+import { getAllEventMatches } from './schedule.ts';
 
 import { NotificationChecker } from './notification-checker.ts';
 
@@ -714,11 +719,14 @@ async function manualNotificationCheck(settings: any, channelId: string) {
       })),
     ];
 
+    // イベントマッチを取得
+    const allEventMatches = getAllEventMatches(scheduleData);
+
     let notificationsSent = 0;
     const now = new Date();
 
     for (const condition of settings.conditions) {
-      // 統一判定ロジックで通知対象のマッチを取得
+      // 通常マッチの処理
       const currentMatches = allMatches.filter((match) =>
         shouldCheckForNotification(match, condition.notifyMinutesBefore, now)
       );
@@ -756,9 +764,35 @@ async function manualNotificationCheck(settings: any, channelId: string) {
         return true;
       });
 
-      // 最初の3件まで通知（スパム防止）
+      // 通常マッチの通知（最初の3件まで、スパム防止）
       for (const match of matchingMatches.slice(0, 3)) {
         const success = await sendMatchNotification(settings, condition, match);
+        if (success) {
+          notificationsSent++;
+        }
+      }
+
+      // イベントマッチの処理
+      const currentEventMatches = allEventMatches.filter((eventMatch) =>
+        shouldCheckForNotification(
+          eventMatch,
+          condition.notifyMinutesBefore,
+          now
+        )
+      );
+
+      const matchingEventMatches = checkEventNotificationConditions(
+        currentEventMatches,
+        condition
+      );
+
+      // イベントマッチの通知（最初の3件まで、スパム防止）
+      for (const eventMatch of matchingEventMatches.slice(0, 3)) {
+        const success = await sendEventMatchNotification(
+          settings,
+          condition,
+          eventMatch
+        );
         if (success) {
           notificationsSent++;
         }
@@ -861,6 +895,93 @@ async function sendMatchNotification(
     return true;
   } catch (error) {
     console.error(`❌ 通知送信エラー:`, error);
+    return false;
+  }
+}
+
+// イベントマッチ通知送信（手動チェック用）
+async function sendEventMatchNotification(
+  userSettings: any,
+  condition: NotificationCondition,
+  eventMatch: EventMatch
+): Promise<boolean> {
+  try {
+    const stages = eventMatch.stages
+      .map((stage: Stage) => stage.name)
+      .join(', ');
+    const startTime = new Date(eventMatch.start_time).toLocaleString('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+
+    const embed = {
+      title: '🎪 スプラトゥーン3 イベントマッチ通知',
+      description: `**${condition.name}** の条件に合致しました！\n\n詳細なスケジュール: https://qnaiv.github.io/splatoon3-schedule-notificator/`,
+      fields: [
+        {
+          name: 'イベント名',
+          value: eventMatch.event.name,
+          inline: true,
+        },
+        {
+          name: 'ルール',
+          value: eventMatch.rule.name,
+          inline: true,
+        },
+        {
+          name: 'ステージ',
+          value: stages,
+          inline: false,
+        },
+        {
+          name: '開始時刻',
+          value: startTime,
+          inline: false,
+        },
+        {
+          name: '説明',
+          value: eventMatch.event.desc || 'なし',
+          inline: false,
+        },
+      ],
+      color: 0xff6600, // オレンジ色でイベントマッチを識別
+      timestamp: new Date().toISOString(),
+      footer: {
+        text: 'Splatoon3 Schedule Bot - Event Match',
+      },
+    };
+
+    const response = await fetch(
+      `https://discord.com/api/v10/channels/${userSettings.channelId}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bot ${DISCORD_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          embeds: [embed],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error(`❌ イベントマッチ通知送信失敗:`, error);
+      return false;
+    }
+
+    console.log(
+      `✅ イベントマッチ通知送信成功: "${condition.name}" - ${eventMatch.event.name}`
+    );
+    return true;
+  } catch (error) {
+    console.error(`❌ イベントマッチ通知送信エラー:`, error);
     return false;
   }
 }
