@@ -10,6 +10,10 @@ import {
   shouldCheckForNotification,
 } from './notifications.ts';
 import { getAllEventMatches } from './schedule.ts';
+import {
+  sendRegularMatchNotification,
+  sendEventMatchNotification,
+} from './notification-utils.ts';
 
 export class NotificationChecker {
   private kvManager: KVNotificationManager;
@@ -181,10 +185,11 @@ export class NotificationChecker {
 
         for (const match of matchingMatches) {
           if (shouldNotify(match, condition)) {
-            const success = await this.sendDiscordNotification(
-              userSettings,
+            const success = await sendRegularMatchNotification(
+              userSettings.channelId,
               condition,
-              match
+              match,
+              this.discordToken
             );
 
             if (success) {
@@ -216,10 +221,11 @@ export class NotificationChecker {
 
         for (const eventMatch of matchingEventMatches) {
           if (shouldNotify(eventMatch, condition)) {
-            const success = await this.sendDiscordEventNotification(
-              userSettings,
+            const success = await sendEventMatchNotification(
+              userSettings.channelId,
               condition,
-              eventMatch
+              eventMatch,
+              this.discordToken
             );
 
             if (success) {
@@ -269,165 +275,5 @@ export class NotificationChecker {
     );
   }
 
-  private async sendDiscordNotification(
-    userSettings: UserNotificationSettings,
-    condition: NotificationCondition,
-    match: ScheduleMatch
-  ): Promise<boolean> {
-    try {
-      const stages = match.stages.map((stage: any) => stage.name).join(', ');
-      const startTime = new Date(match.start_time).toLocaleString('ja-JP', {
-        timeZone: 'Asia/Tokyo',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      });
 
-      const embed = {
-        title: '🦑 スプラトゥーン3 通知',
-        description: `**${condition.name}** の条件に合致しました！\n${condition.notifyMinutesBefore}分前です！\n\n詳細なスケジュール: https://qnaiv.github.io/splatoon3-schedule-notificator/`,
-        fields: [
-          {
-            name: 'ルール',
-            value: match.rule.name,
-            inline: true,
-          },
-          {
-            name: 'マッチタイプ',
-            value: match.match_type,
-            inline: true,
-          },
-          {
-            name: 'ステージ',
-            value: stages,
-            inline: false,
-          },
-          {
-            name: '開始時刻',
-            value: startTime,
-            inline: false,
-          },
-        ],
-        color: 0x00ff88,
-        timestamp: new Date().toISOString(),
-        footer: {
-          text: 'Splatoon3 Schedule Bot',
-        },
-      };
-
-      const response = await fetch(
-        `https://discord.com/api/v10/channels/${userSettings.channelId}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bot ${this.discordToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            embeds: [embed],
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error(`❌ Discord通知送信失敗:`, error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error(`❌ Discord通知送信エラー:`, error);
-      return false;
-    }
-  }
-
-  private async sendDiscordEventNotification(
-    userSettings: UserNotificationSettings,
-    condition: NotificationCondition,
-    eventMatch: EventMatch
-  ): Promise<boolean> {
-    try {
-      const stages = eventMatch.stages
-        .map((stage: any) => stage.name)
-        .join(', ');
-      const startTime = new Date(eventMatch.start_time).toLocaleString(
-        'ja-JP',
-        {
-          timeZone: 'Asia/Tokyo',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        }
-      );
-
-      const embed = {
-        title: '🎪 スプラトゥーン3 イベントマッチ通知',
-        description: `**${condition.name}** の条件に合致しました！\n${condition.notifyMinutesBefore}分前です！\n\n詳細なスケジュール: https://qnaiv.github.io/splatoon3-schedule-notificator/`,
-        fields: [
-          {
-            name: 'イベント名',
-            value: eventMatch.event.name,
-            inline: true,
-          },
-          {
-            name: 'ルール',
-            value: eventMatch.rule.name,
-            inline: true,
-          },
-          {
-            name: 'ステージ',
-            value: stages,
-            inline: false,
-          },
-          {
-            name: '開始時刻',
-            value: startTime,
-            inline: false,
-          },
-          {
-            name: '説明',
-            value: eventMatch.event.desc || 'なし',
-            inline: false,
-          },
-        ],
-        color: 0xff6600, // オレンジ色でイベントマッチを識別
-        timestamp: new Date().toISOString(),
-        footer: {
-          text: 'Splatoon3 Schedule Bot - Event Match',
-        },
-      };
-
-      const response = await fetch(
-        `https://discord.com/api/v10/channels/${userSettings.channelId}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bot ${this.discordToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            embeds: [embed],
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error(`❌ Discord イベントマッチ通知送信失敗:`, error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error(`❌ Discord イベントマッチ通知送信エラー:`, error);
-      return false;
-    }
-  }
 }

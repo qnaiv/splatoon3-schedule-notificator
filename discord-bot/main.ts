@@ -13,6 +13,11 @@ import {
   shouldCheckForNotification,
   checkEventNotificationConditions,
 } from './notifications.ts';
+import {
+  sendRegularMatchNotification,
+  sendEventMatchNotification,
+  NOTIFICATION_LIMITS,
+} from './notification-utils.ts';
 import { getAllEventMatches } from './schedule.ts';
 
 import { NotificationChecker } from './notification-checker.ts';
@@ -752,7 +757,7 @@ async function manualNotificationCheck(settings: any, channelId: string) {
 
         // ステージ条件チェック
         if (condition.stages && condition.stages.length > 0) {
-          const matchStageIds = match.stages.map((stage: Stage) => stage.id);
+          const matchStageIds = match.stages.map((stage) => stage.id);
           const hasMatchingStage = condition.stages.some((stageId) =>
             matchStageIds.includes(stageId)
           );
@@ -765,8 +770,14 @@ async function manualNotificationCheck(settings: any, channelId: string) {
       });
 
       // 通常マッチの通知（最初の3件まで、スパム防止）
-      for (const match of matchingMatches.slice(0, 3)) {
-        const success = await sendMatchNotification(settings, condition, match);
+      for (const match of matchingMatches.slice(0, NOTIFICATION_LIMITS.MAX_NOTIFICATIONS_PER_CONDITION)) {
+        const success = await sendRegularMatchNotification(
+          settings.channelId,
+          condition,
+          match,
+          DISCORD_TOKEN,
+          true // isManualCheck
+        );
         if (success) {
           notificationsSent++;
         }
@@ -787,11 +798,13 @@ async function manualNotificationCheck(settings: any, channelId: string) {
       );
 
       // イベントマッチの通知（最初の3件まで、スパム防止）
-      for (const eventMatch of matchingEventMatches.slice(0, 3)) {
+      for (const eventMatch of matchingEventMatches.slice(0, NOTIFICATION_LIMITS.MAX_NOTIFICATIONS_PER_CONDITION)) {
         const success = await sendEventMatchNotification(
-          settings,
+          settings.channelId,
           condition,
-          eventMatch
+          eventMatch,
+          DISCORD_TOKEN,
+          true // isManualCheck
         );
         if (success) {
           notificationsSent++;
@@ -821,170 +834,7 @@ async function manualNotificationCheck(settings: any, channelId: string) {
   }
 }
 
-// マッチ通知送信（手動チェック用）
-async function sendMatchNotification(
-  userSettings: any,
-  condition: NotificationCondition,
-  match: ScheduleMatch
-): Promise<boolean> {
-  try {
-    const stages = match.stages.map((stage: Stage) => stage.name).join(', ');
-    const startTime = new Date(match.start_time).toLocaleString('ja-JP', {
-      timeZone: 'Asia/Tokyo',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
 
-    const embed = {
-      title: '🦑 スプラトゥーン3 通知',
-      description: `**${condition.name}** の条件に合致しました！\n\n詳細なスケジュール: https://qnaiv.github.io/splatoon3-schedule-notificator/`,
-      fields: [
-        {
-          name: 'ルール',
-          value: match.rule.name,
-          inline: true,
-        },
-        {
-          name: 'マッチタイプ',
-          value: match.match_type,
-          inline: true,
-        },
-        {
-          name: 'ステージ',
-          value: stages,
-          inline: false,
-        },
-        {
-          name: '開始時刻',
-          value: startTime,
-          inline: false,
-        },
-      ],
-      color: 0x00ff88,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: 'Splatoon3 Schedule Bot',
-      },
-    };
-
-    const response = await fetch(
-      `https://discord.com/api/v10/channels/${userSettings.channelId}/messages`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bot ${DISCORD_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          embeds: [embed],
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error(`❌ 通知送信失敗:`, error);
-      return false;
-    }
-
-    console.log(`✅ 通知送信成功: "${condition.name}"`);
-    return true;
-  } catch (error) {
-    console.error(`❌ 通知送信エラー:`, error);
-    return false;
-  }
-}
-
-// イベントマッチ通知送信（手動チェック用）
-async function sendEventMatchNotification(
-  userSettings: any,
-  condition: NotificationCondition,
-  eventMatch: EventMatch
-): Promise<boolean> {
-  try {
-    const stages = eventMatch.stages
-      .map((stage: Stage) => stage.name)
-      .join(', ');
-    const startTime = new Date(eventMatch.start_time).toLocaleString('ja-JP', {
-      timeZone: 'Asia/Tokyo',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-
-    const embed = {
-      title: '🎪 スプラトゥーン3 イベントマッチ通知',
-      description: `**${condition.name}** の条件に合致しました！\n\n詳細なスケジュール: https://qnaiv.github.io/splatoon3-schedule-notificator/`,
-      fields: [
-        {
-          name: 'イベント名',
-          value: eventMatch.event.name,
-          inline: true,
-        },
-        {
-          name: 'ルール',
-          value: eventMatch.rule.name,
-          inline: true,
-        },
-        {
-          name: 'ステージ',
-          value: stages,
-          inline: false,
-        },
-        {
-          name: '開始時刻',
-          value: startTime,
-          inline: false,
-        },
-        {
-          name: '説明',
-          value: eventMatch.event.desc || 'なし',
-          inline: false,
-        },
-      ],
-      color: 0xff6600, // オレンジ色でイベントマッチを識別
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: 'Splatoon3 Schedule Bot - Event Match',
-      },
-    };
-
-    const response = await fetch(
-      `https://discord.com/api/v10/channels/${userSettings.channelId}/messages`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bot ${DISCORD_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          embeds: [embed],
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error(`❌ イベントマッチ通知送信失敗:`, error);
-      return false;
-    }
-
-    console.log(
-      `✅ イベントマッチ通知送信成功: "${condition.name}" - ${eventMatch.event.name}`
-    );
-    return true;
-  } catch (error) {
-    console.error(`❌ イベントマッチ通知送信エラー:`, error);
-    return false;
-  }
-}
 
 // シンプルメッセージ送信
 async function sendSimpleMessage(
