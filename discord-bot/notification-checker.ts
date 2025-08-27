@@ -2,12 +2,18 @@ import {
   KVNotificationManager,
   UserNotificationSettings,
 } from './kv-notification-manager.ts';
-import { ScheduleMatch, NotificationCondition } from './types.ts';
+import { ScheduleMatch, EventMatch, NotificationCondition } from './types.ts';
 import {
   checkNotificationConditions,
+  checkEventNotificationConditions,
   shouldNotify,
   shouldCheckForNotification,
 } from './notifications.ts';
+import { getAllEventMatches } from './schedule.ts';
+import {
+  sendRegularMatchNotification,
+  sendEventMatchNotification,
+} from './notification-utils.ts';
 
 export class NotificationChecker {
   private kvManager: KVNotificationManager;
@@ -96,7 +102,10 @@ export class NotificationChecker {
       }
 
       const allMatches = this.getAllMatchesFromData(scheduleData);
-      console.log(`🎮 総マッチ数: ${allMatches.length}`);
+      const allEventMatches = getAllEventMatches(scheduleData);
+      console.log(
+        `🎮 総マッチ数: ${allMatches.length}, イベントマッチ数: ${allEventMatches.length}`
+      );
 
       let totalNotificationsSent = 0;
 
@@ -105,7 +114,8 @@ export class NotificationChecker {
         try {
           const notifications = await this.checkUserNotifications(
             userSettings,
-            allMatches
+            allMatches,
+            allEventMatches
           );
           totalNotificationsSent += notifications;
         } catch (error) {
@@ -152,7 +162,8 @@ export class NotificationChecker {
 
   private async checkUserNotifications(
     userSettings: UserNotificationSettings,
-    allMatches: ScheduleMatch[]
+    allMatches: ScheduleMatch[],
+    allEventMatches: EventMatch[]
   ): Promise<number> {
     let notificationsSent = 0;
 
@@ -160,7 +171,7 @@ export class NotificationChecker {
       if (!condition.enabled) continue;
 
       try {
-        // 通知対象のマッチを取得（指定時間前のマッチ）
+        // 通常マッチの処理
         const targetMatches = this.getMatchesForNotification(
           allMatches,
           condition.notifyMinutesBefore
@@ -174,10 +185,11 @@ export class NotificationChecker {
 
         for (const match of matchingMatches) {
           if (shouldNotify(match, condition)) {
-            const success = await this.sendDiscordNotification(
-              userSettings,
+            const success = await sendRegularMatchNotification(
+              userSettings.channelId,
               condition,
-              match
+              match,
+              this.discordToken
             );
 
             if (success) {
@@ -189,7 +201,43 @@ export class NotificationChecker {
               );
               notificationsSent++;
               console.log(
-                `✅ Notification sent to user ${userSettings.userId} for condition "${condition.name}"`
+                `✅ Regular match notification sent to user ${userSettings.userId} for condition "${condition.name}"`
+              );
+            }
+          }
+        }
+
+        // イベントマッチの処理
+        const targetEventMatches = this.getEventMatchesForNotification(
+          allEventMatches,
+          condition.notifyMinutesBefore
+        );
+
+        // 条件に合致するイベントマッチをフィルタ
+        const matchingEventMatches = checkEventNotificationConditions(
+          targetEventMatches,
+          condition
+        );
+
+        for (const eventMatch of matchingEventMatches) {
+          if (shouldNotify(eventMatch, condition)) {
+            const success = await sendEventMatchNotification(
+              userSettings.channelId,
+              condition,
+              eventMatch,
+              this.discordToken
+            );
+
+            if (success) {
+              // 通知成功時はKVのlastNotifiedを更新
+              await this.kvManager.updateLastNotified(
+                userSettings.userId,
+                userSettings.guildId,
+                condition.name
+              );
+              notificationsSent++;
+              console.log(
+                `✅ Event match notification sent to user ${userSettings.userId} for condition "${condition.name}"`
               );
             }
           }
@@ -216,79 +264,16 @@ export class NotificationChecker {
     );
   }
 
-  private async sendDiscordNotification(
-    userSettings: UserNotificationSettings,
-    condition: NotificationCondition,
-    match: ScheduleMatch
-  ): Promise<boolean> {
-    try {
-      const stages = match.stages.map((stage: any) => stage.name).join(', ');
-      const startTime = new Date(match.start_time).toLocaleString('ja-JP', {
-        timeZone: 'Asia/Tokyo',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      });
+  private getEventMatchesForNotification(
+    eventMatches: EventMatch[],
+    notifyMinutesBefore: number
+  ): EventMatch[] {
+    const now = new Date();
 
-      const embed = {
-        title: '🦑 スプラトゥーン3 通知',
-        description: `**${condition.name}** の条件に合致しました！\n${condition.notifyMinutesBefore}分前です！\n\n詳細なスケジュール: https://qnaiv.github.io/splatoon3-schedule-notificator/`,
-        fields: [
-          {
-            name: 'ルール',
-            value: match.rule.name,
-            inline: true,
-          },
-          {
-            name: 'マッチタイプ',
-            value: match.match_type,
-            inline: true,
-          },
-          {
-            name: 'ステージ',
-            value: stages,
-            inline: false,
-          },
-          {
-            name: '開始時刻',
-            value: startTime,
-            inline: false,
-          },
-        ],
-        color: 0x00ff88,
-        timestamp: new Date().toISOString(),
-        footer: {
-          text: 'Splatoon3 Schedule Bot',
-        },
-      };
-
-      const response = await fetch(
-        `https://discord.com/api/v10/channels/${userSettings.channelId}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bot ${this.discordToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            embeds: [embed],
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error(`❌ Discord通知送信失敗:`, error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error(`❌ Discord通知送信エラー:`, error);
-      return false;
-    }
+    return eventMatches.filter((eventMatch) =>
+      shouldCheckForNotification(eventMatch, notifyMinutesBefore, now)
+    );
   }
+
+
 }

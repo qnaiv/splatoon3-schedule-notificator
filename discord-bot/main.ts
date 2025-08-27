@@ -4,11 +4,21 @@ import {
   DiscordInteraction,
   Embed,
   ScheduleMatch,
+  EventMatch,
   ApiMatch,
   Stage,
 } from './types.ts';
 import { KVNotificationManager } from './kv-notification-manager.ts';
-import { shouldCheckForNotification } from './notifications.ts';
+import {
+  shouldCheckForNotification,
+  checkEventNotificationConditions,
+} from './notifications.ts';
+import {
+  sendRegularMatchNotification,
+  sendEventMatchNotification,
+  NOTIFICATION_LIMITS,
+} from './notification-utils.ts';
+import { getAllEventMatches } from './schedule.ts';
 
 import { NotificationChecker } from './notification-checker.ts';
 
@@ -714,11 +724,14 @@ async function manualNotificationCheck(settings: any, channelId: string) {
       })),
     ];
 
+    // イベントマッチを取得
+    const allEventMatches = getAllEventMatches(scheduleData);
+
     let notificationsSent = 0;
     const now = new Date();
 
     for (const condition of settings.conditions) {
-      // 統一判定ロジックで通知対象のマッチを取得
+      // 通常マッチの処理
       const currentMatches = allMatches.filter((match) =>
         shouldCheckForNotification(match, condition.notifyMinutesBefore, now)
       );
@@ -744,7 +757,7 @@ async function manualNotificationCheck(settings: any, channelId: string) {
 
         // ステージ条件チェック
         if (condition.stages && condition.stages.length > 0) {
-          const matchStageIds = match.stages.map((stage: Stage) => stage.id);
+          const matchStageIds = match.stages.map((stage) => stage.id);
           const hasMatchingStage = condition.stages.some((stageId) =>
             matchStageIds.includes(stageId)
           );
@@ -756,9 +769,43 @@ async function manualNotificationCheck(settings: any, channelId: string) {
         return true;
       });
 
-      // 最初の3件まで通知（スパム防止）
-      for (const match of matchingMatches.slice(0, 3)) {
-        const success = await sendMatchNotification(settings, condition, match);
+      // 通常マッチの通知（最初の3件まで、スパム防止）
+      for (const match of matchingMatches.slice(0, NOTIFICATION_LIMITS.MAX_NOTIFICATIONS_PER_CONDITION)) {
+        const success = await sendRegularMatchNotification(
+          settings.channelId,
+          condition,
+          match,
+          DISCORD_TOKEN,
+          true // isManualCheck
+        );
+        if (success) {
+          notificationsSent++;
+        }
+      }
+
+      // イベントマッチの処理
+      const currentEventMatches = allEventMatches.filter((eventMatch) =>
+        shouldCheckForNotification(
+          eventMatch,
+          condition.notifyMinutesBefore,
+          now
+        )
+      );
+
+      const matchingEventMatches = checkEventNotificationConditions(
+        currentEventMatches,
+        condition
+      );
+
+      // イベントマッチの通知（最初の3件まで、スパム防止）
+      for (const eventMatch of matchingEventMatches.slice(0, NOTIFICATION_LIMITS.MAX_NOTIFICATIONS_PER_CONDITION)) {
+        const success = await sendEventMatchNotification(
+          settings.channelId,
+          condition,
+          eventMatch,
+          DISCORD_TOKEN,
+          true // isManualCheck
+        );
         if (success) {
           notificationsSent++;
         }
@@ -787,83 +834,7 @@ async function manualNotificationCheck(settings: any, channelId: string) {
   }
 }
 
-// マッチ通知送信（手動チェック用）
-async function sendMatchNotification(
-  userSettings: any,
-  condition: NotificationCondition,
-  match: ScheduleMatch
-): Promise<boolean> {
-  try {
-    const stages = match.stages.map((stage: Stage) => stage.name).join(', ');
-    const startTime = new Date(match.start_time).toLocaleString('ja-JP', {
-      timeZone: 'Asia/Tokyo',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
 
-    const embed = {
-      title: '🦑 スプラトゥーン3 通知',
-      description: `**${condition.name}** の条件に合致しました！\n\n詳細なスケジュール: https://qnaiv.github.io/splatoon3-schedule-notificator/`,
-      fields: [
-        {
-          name: 'ルール',
-          value: match.rule.name,
-          inline: true,
-        },
-        {
-          name: 'マッチタイプ',
-          value: match.match_type,
-          inline: true,
-        },
-        {
-          name: 'ステージ',
-          value: stages,
-          inline: false,
-        },
-        {
-          name: '開始時刻',
-          value: startTime,
-          inline: false,
-        },
-      ],
-      color: 0x00ff88,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: 'Splatoon3 Schedule Bot',
-      },
-    };
-
-    const response = await fetch(
-      `https://discord.com/api/v10/channels/${userSettings.channelId}/messages`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bot ${DISCORD_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          embeds: [embed],
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error(`❌ 通知送信失敗:`, error);
-      return false;
-    }
-
-    console.log(`✅ 通知送信成功: "${condition.name}"`);
-    return true;
-  } catch (error) {
-    console.error(`❌ 通知送信エラー:`, error);
-    return false;
-  }
-}
 
 // シンプルメッセージ送信
 async function sendSimpleMessage(
