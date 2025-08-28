@@ -720,7 +720,7 @@ const BasicMatchConditionEditor: React.FC<BasicMatchConditionEditorProps> = ({
 };
 
 // イベントマッチ条件編集モーダル
-interface EventMatchConditionEditorProps {
+export interface EventMatchConditionEditorProps {
   condition: NotificationCondition | null;
   allStages: Array<{ id: string; name: string }>;
   eventTypes: string[];
@@ -730,13 +730,9 @@ interface EventMatchConditionEditorProps {
   onCancel: () => void;
 }
 
-const EventMatchConditionEditor: React.FC<EventMatchConditionEditorProps> = ({
-  condition,
-  allStages,
-  eventTypes,
-  onSave,
-  onCancel,
-}) => {
+export const EventMatchConditionEditor: React.FC<
+  EventMatchConditionEditorProps
+> = ({ condition, allStages, eventTypes, onSave, onCancel }) => {
   const [formData, setFormData] = useState(() => ({
     name: condition?.name || '',
     enabled: condition?.enabled ?? true,
@@ -941,10 +937,22 @@ const ConditionSection: React.FC<ConditionSectionProps> = ({
     }
   };
 
+  const handleClearAll = () => {
+    onSelectionChange([]);
+  };
+
   return (
     <div>
       <div className="flex items-center gap-4 mb-3">
         <label className="text-sm font-medium">{title}</label>
+        {selectedValues.length > 0 && (
+          <button
+            onClick={handleClearAll}
+            className="text-xs text-blue-500 hover:text-blue-700 underline"
+          >
+            全て外す
+          </button>
+        )}
       </div>
 
       <div

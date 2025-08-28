@@ -8,6 +8,7 @@ export interface GenerateConditionNameParams {
   rules: string[];
   matchTypes: string[];
   stages: string[];
+  eventName?: string;
 }
 
 /**
@@ -16,13 +17,20 @@ export interface GenerateConditionNameParams {
  * - 複数項目は同じ種類内でスラッシュ区切り
  * - 異なる種類間はカンマ区切り
  * - レギュラーマッチは表示しない
+ * - イベントマッチの場合はイベント名を前に付ける
  */
 export function generateConditionName({
   rules,
   matchTypes,
   stages,
+  eventName,
 }: GenerateConditionNameParams): string {
   const parts: string[] = [];
+
+  // イベント名がある場合は最初に追加
+  if (eventName) {
+    parts.push(eventName);
+  }
 
   // ルール部分を追加
   if (rules.length > 0) {
