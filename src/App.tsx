@@ -7,8 +7,9 @@ import NotificationDialog from './components/NotificationDialog';
 import { useSchedule } from './hooks/useSchedule';
 import { useEventMatches } from './hooks/useEventMatches';
 import { useSettings } from './hooks/useSettings';
-import { ScheduleMatch, NotificationCondition } from './types';
+import { ScheduleMatch, EventMatch, NotificationCondition } from './types';
 import { scheduleToCondition } from './utils/scheduleToCondition';
+import { eventMatchToCondition } from './utils/eventMatchToCondition';
 
 const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<
@@ -17,6 +18,8 @@ const App: React.FC = () => {
   const [showNotificationDialog, setShowNotificationDialog] = useState(false);
   const [selectedSchedule, setSelectedSchedule] =
     useState<ScheduleMatch | null>(null);
+  const [selectedEventMatch, setSelectedEventMatch] =
+    useState<EventMatch | null>(null);
   const {
     currentMatches,
     upcomingMatches,
@@ -56,6 +59,13 @@ const App: React.FC = () => {
 
   const handleScheduleCardClick = (match: ScheduleMatch) => {
     setSelectedSchedule(match);
+    setSelectedEventMatch(null);
+    setShowNotificationDialog(true);
+  };
+
+  const handleEventCardClick = (match: EventMatch) => {
+    setSelectedEventMatch(match);
+    setSelectedSchedule(null);
     setShowNotificationDialog(true);
   };
 
@@ -66,6 +76,7 @@ const App: React.FC = () => {
       await addNotificationCondition(conditionData);
       setShowNotificationDialog(false);
       setSelectedSchedule(null);
+      setSelectedEventMatch(null);
       // 成功した場合は設定タブに移動
       setCurrentTab('settings');
     } catch (err) {
@@ -77,6 +88,7 @@ const App: React.FC = () => {
   const handleNotificationCancel = () => {
     setShowNotificationDialog(false);
     setSelectedSchedule(null);
+    setSelectedEventMatch(null);
   };
 
   return (
@@ -207,6 +219,7 @@ const App: React.FC = () => {
             error={eventError}
             formatTime={formatTime}
             formatDate={formatDate}
+            onEventCardClick={handleEventCardClick}
           />
         ) : (
           <NotificationSettings />
@@ -217,7 +230,11 @@ const App: React.FC = () => {
       <NotificationDialog
         isOpen={showNotificationDialog}
         initialCondition={
-          selectedSchedule ? scheduleToCondition(selectedSchedule) : undefined
+          selectedSchedule
+            ? scheduleToCondition(selectedSchedule)
+            : selectedEventMatch
+              ? eventMatchToCondition(selectedEventMatch)
+              : undefined
         }
         allStages={allStages}
         onSave={handleNotificationSave}
