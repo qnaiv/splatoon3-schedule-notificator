@@ -30,11 +30,11 @@ export const eventMatchToCondition = (
     enabled: true,
     stages: {
       operator: 'OR',
-      values: stageIds,
+      values: [], // イベントマッチでは通常のステージは使わない
     },
     rules: {
       operator: 'OR',
-      values: [ruleName],
+      values: [], // イベントマッチでは通常のルールは使わない
     },
     matchTypes: {
       operator: 'OR',

@@ -693,7 +693,7 @@ const BasicMatchConditionEditor: React.FC<BasicMatchConditionEditorProps> = ({
 };
 
 // イベントマッチ条件編集モーダル
-interface EventMatchConditionEditorProps {
+export interface EventMatchConditionEditorProps {
   condition: NotificationCondition | null;
   allStages: Array<{ id: string; name: string }>;
   eventTypes: string[];
@@ -703,13 +703,9 @@ interface EventMatchConditionEditorProps {
   onCancel: () => void;
 }
 
-const EventMatchConditionEditor: React.FC<EventMatchConditionEditorProps> = ({
-  condition,
-  allStages,
-  eventTypes,
-  onSave,
-  onCancel,
-}) => {
+export const EventMatchConditionEditor: React.FC<
+  EventMatchConditionEditorProps
+> = ({ condition, allStages, eventTypes, onSave, onCancel }) => {
   const [formData, setFormData] = useState(() => ({
     name: condition?.name || '',
     enabled: condition?.enabled ?? true,
