@@ -17,6 +17,40 @@ import {
   MatchType,
   EventType,
 } from '../types';
+
+// 通知時間選択肢の定数
+const NOTIFICATION_TIME_OPTIONS = [
+  { value: 15, label: '15分前' },
+  { value: 30, label: '30分前' },
+  { value: 60, label: '1時間前' },
+  { value: 120, label: '2時間前' },
+  { value: 180, label: '3時間前' },
+  { value: 240, label: '4時間前' },
+  { value: 360, label: '6時間前' },
+  { value: 720, label: '12時間前' },
+  { value: 1440, label: '24時間前' },
+] as const;
+
+// 通知分前の型定義
+type NotificationMinutes = (typeof NOTIFICATION_TIME_OPTIONS)[number]['value'];
+
+// 通知時間選択コンポーネント
+const NotificationTimeSelect: React.FC<{
+  value: number;
+  onChange: (value: NotificationMinutes) => void;
+}> = ({ value, onChange }) => (
+  <select
+    value={value}
+    onChange={(e) => onChange(parseInt(e.target.value) as NotificationMinutes)}
+    className="border rounded px-3 py-2"
+  >
+    {NOTIFICATION_TIME_OPTIONS.map((option) => (
+      <option key={option.value} value={option.value}>
+        {option.label}
+      </option>
+    ))}
+  </select>
+);
 import { convertUIToBotCondition } from '../types/shared';
 import { generateConditionName } from '../utils/conditionNameGenerator';
 import { encodeToBase64 } from '../utils';
@@ -577,26 +611,15 @@ const BasicMatchConditionEditor: React.FC<BasicMatchConditionEditorProps> = ({
                 通知タイミング
               </label>
               <div className="flex items-center gap-2">
-                <select
+                <NotificationTimeSelect
                   value={formData.notifyMinutesBefore}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setFormData({
                       ...formData,
-                      notifyMinutesBefore: parseInt(e.target.value),
+                      notifyMinutesBefore: value,
                     })
                   }
-                  className="border rounded px-3 py-2"
-                >
-                  <option value={15}>15分前</option>
-                  <option value={30}>30分前</option>
-                  <option value={60}>1時間前</option>
-                  <option value={120}>2時間前</option>
-                  <option value={180}>3時間前</option>
-                  <option value={240}>4時間前</option>
-                  <option value={360}>6時間前</option>
-                  <option value={720}>12時間前</option>
-                  <option value={1440}>24時間前</option>
-                </select>
+                />
                 <span className="text-sm text-gray-600">に通知</span>
               </div>
             </div>
@@ -788,26 +811,15 @@ const EventMatchConditionEditor: React.FC<EventMatchConditionEditorProps> = ({
                 通知タイミング
               </label>
               <div className="flex items-center gap-2">
-                <select
+                <NotificationTimeSelect
                   value={formData.notifyMinutesBefore}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setFormData({
                       ...formData,
-                      notifyMinutesBefore: parseInt(e.target.value),
+                      notifyMinutesBefore: value,
                     })
                   }
-                  className="border rounded px-3 py-2"
-                >
-                  <option value={15}>15分前</option>
-                  <option value={30}>30分前</option>
-                  <option value={60}>1時間前</option>
-                  <option value={120}>2時間前</option>
-                  <option value={180}>3時間前</option>
-                  <option value={240}>4時間前</option>
-                  <option value={360}>6時間前</option>
-                  <option value={720}>12時間前</option>
-                  <option value={1440}>24時間前</option>
-                </select>
+                />
                 <span className="text-sm text-gray-600">に通知</span>
               </div>
             </div>
