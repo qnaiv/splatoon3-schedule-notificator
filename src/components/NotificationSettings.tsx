@@ -587,10 +587,14 @@ const BasicMatchConditionEditor: React.FC<BasicMatchConditionEditorProps> = ({
                   }
                   className="border rounded px-3 py-2"
                 >
-                  <option value={10}>10分前</option>
+                  <option value={15}>15分前</option>
                   <option value={30}>30分前</option>
                   <option value={60}>1時間前</option>
+                  <option value={120}>2時間前</option>
+                  <option value={180}>3時間前</option>
                   <option value={240}>4時間前</option>
+                  <option value={360}>6時間前</option>
+                  <option value={720}>12時間前</option>
                   <option value={1440}>24時間前</option>
                 </select>
                 <span className="text-sm text-gray-600">に通知</span>
@@ -794,10 +798,14 @@ const EventMatchConditionEditor: React.FC<EventMatchConditionEditorProps> = ({
                   }
                   className="border rounded px-3 py-2"
                 >
-                  <option value={10}>10分前</option>
+                  <option value={15}>15分前</option>
                   <option value={30}>30分前</option>
                   <option value={60}>1時間前</option>
+                  <option value={120}>2時間前</option>
+                  <option value={180}>3時間前</option>
                   <option value={240}>4時間前</option>
+                  <option value={360}>6時間前</option>
+                  <option value={720}>12時間前</option>
                   <option value={1440}>24時間前</option>
                 </select>
                 <span className="text-sm text-gray-600">に通知</span>
