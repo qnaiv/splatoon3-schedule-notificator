@@ -1,10 +1,4 @@
-import {
-  EventMatch,
-  NotificationCondition,
-  GameRule,
-  MatchType,
-} from '../types';
-import { generateConditionName } from './conditionNameGenerator';
+import { EventMatch, NotificationCondition, MatchType } from '../types';
 
 /**
  * イベントマッチから通知条件データを生成する
@@ -12,18 +6,10 @@ import { generateConditionName } from './conditionNameGenerator';
 export const eventMatchToCondition = (
   match: EventMatch
 ): Partial<NotificationCondition> => {
-  const stageIds = match.stages.map((stage) => stage.id);
-  const stageNames = match.stages.map((stage) => stage.name);
-  const ruleName = match.rule.name as GameRule;
   const eventName = match.event.name;
 
-  // 条件名を自動生成（イベント情報を含める）
-  const conditionName = generateConditionName({
-    rules: [ruleName],
-    matchTypes: ['イベントマッチ'],
-    stages: stageNames,
-    eventName: eventName,
-  });
+  // 条件名を自動生成（イベント名のみ）
+  const conditionName = eventName;
 
   const condition: Partial<NotificationCondition> = {
     name: conditionName,
@@ -48,7 +34,7 @@ export const eventMatchToCondition = (
       },
       eventStages: {
         operator: 'OR',
-        values: stageIds,
+        values: [], // イベントステージは選択しない
       },
     },
     notifyMinutesBefore: 10, // デフォルトの通知タイミング
